@@ -1,5 +1,13 @@
 # opencode-byterover
 
+## 0.1.1
+
+### Patch Changes
+
+- [#7](https://github.com/ian-pascoe/opencode-byterover/pull/7) [`78ce893`](https://github.com/ian-pascoe/opencode-byterover/commit/78ce8935c6bc4d705ae49da86cfdad4d3919ed91) Thanks [@ian-pascoe](https://github.com/ian-pascoe)! - Respect `brvPath` parameter and add high-value tests (vitest)
+
+- [#8](https://github.com/ian-pascoe/opencode-byterover/pull/8) [`11f33b7`](https://github.com/ian-pascoe/opencode-byterover/commit/11f33b754031c462d72e70717afe83caf5bab923) Thanks [@ian-pascoe](https://github.com/ian-pascoe)! - Fix format and lint ignore patterns to include changesets
+
 ## 0.1.0
 
 ### Minor Changes
