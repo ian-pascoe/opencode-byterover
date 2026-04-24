@@ -1,42 +1,33 @@
 ---
-children_hash: eed952f364ba3159aaf800f09072702da8f71b67bb7d592452522e2c02fdcd09
-compression_ratio: 0.5025678650036683
+children_hash: 295be5211fe93f35e5cd359399809c0e3a581dc0e2541e5cd55e75bc563f7835
+compression_ratio: 0.3609341825902335
 condensation_order: 1
-covers: [changesets_and_github_actions_ci.md, husky_pre_commit_checks.md]
-covers_token_total: 1363
+covers: [changesets_and_github_actions_ci.md, changesets_release_pr_convention.md, husky_pre_commit_checks.md]
+covers_token_total: 1884
 summary_level: d1
-token_count: 685
+token_count: 680
 type: summary
 ---
 # Release Management / CI
 
-This level summarizes the repository’s release automation and pre-commit quality gates. The two child entries describe complementary safeguards: **`changesets_and_github_actions_ci.md`** covers the publish pipeline to npm, while **`husky_pre_commit_checks.md`** covers local commit-time validation and exclusion of generated workspace state.
+This d1 summary covers the repository’s release automation and commit-quality gates. The knowledge is split into two main areas: **release publishing via Changesets + GitHub Actions** and **local pre-commit enforcement via Husky**.
 
-## Key structural themes
+## Release publishing and workflow automation
+See **changesets_and_github_actions_ci.md** for the full publishing setup and **changesets_release_pr_convention.md** for the PR naming/commit rule.
 
-- **Two-stage release safety**
-  - Local validation happens before commit via Husky.
-  - Remote release automation happens after merge via GitHub Actions + Changesets.
-
-- **Generated state separation**
-  - `.brv/` is treated as local/generated workspace state.
-  - It is excluded from Git and formatting to avoid false failures.
-
-## `changesets_and_github_actions_ci.md`
-
-- Documents the repo’s **Changesets-driven release flow** and GitHub Actions publish setup.
-- Release flow:
-  - `pnpm changeset` for a user-facing change
+- The release pipeline is **Changesets-driven** and publishes through **GitHub Actions** using `NPM_TOKEN`.
+- Required prerequisites:
+  - GitHub Actions must be enabled.
+  - Workflow permissions must allow read/write, or explicit permissions must be set in the workflow.
+  - The repo secret `NPM_TOKEN` must be an npm automation token with publish access.
+- The documented flow is:
+  - `pnpm changeset`
   - merge to `main`
-  - GitHub opens a Changesets release PR
-  - merge release PR
-  - npm publish via `NPM_TOKEN`
-- Key dependencies / requirements:
-  - GitHub Actions must be enabled
-  - workflow permissions must allow read/write, or workflows must specify explicit permissions
-  - repository secret `NPM_TOKEN` must be an npm automation token with publish access
-  - if the release PR cannot be opened, enable **Allow GitHub Actions to create and approve pull requests**
-- Files involved:
+  - GitHub opens a release PR
+  - merge the release PR
+  - npm publish runs via `NPM_TOKEN`
+- If the Changesets release PR fails to open, enable **“Allow GitHub Actions to create and approve pull requests.”**
+- Relevant repo files:
   - `.changeset/config.json`
   - `.github/workflows/ci.yml`
   - `.github/workflows/release.yml`
@@ -44,34 +35,33 @@ This level summarizes the repository’s release automation and pre-commit quali
   - `README.md`
   - `tsconfig.json`
   - `.oxlintrc.json`
-- Verification included repo checks such as `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm build`, and `pnpm pack --dry-run`.
 
-## `husky_pre_commit_checks.md`
+### Release PR convention
+- Release PRs now use conventional commit style: `chore(release): v{version}`.
+- The workflow reads the bumped package version after `changeset version` / `version-packages` and uses that version for both the PR title and commit message.
+- This creates a standardized release-creation path when changesets are present.
+- If no changesets exist, the workflow still falls back to `changesets/action@v1` for trusted-publishing release publish.
 
-- Documents the addition of **Husky** for repo-local pre-commit enforcement.
-- Hook flow:
-  - install Husky
-  - run `prepare: husky`
-  - pre-commit executes:
-    - `pnpm format:check`
-    - `pnpm lint`
-    - `pnpm typecheck`
-- Key dependencies / behavior:
-  - relies on existing format, lint, and typecheck scripts
-  - the project has no test script, so the hook uses the existing checks instead of `pnpm test`
-  - `.brv/` is considered generated local state and is excluded from Git and from `oxfmt`
-- Files involved:
+## Pre-commit checks with Husky
+See **husky_pre_commit_checks.md** for the repo-local commit gate setup.
+
+- Husky was added as dev tooling and wired through `package.json` with `prepare: husky`.
+- The `.husky/pre-commit` hook runs:
+  - `pnpm format:check`
+  - `pnpm lint`
+  - `pnpm typecheck`
+- The project does not rely on `pnpm test` here because no test script exists.
+- Local ByteRover state in `.brv/` is treated as generated state:
+  - ignored in `.gitignore`
+  - excluded from `oxfmt` via `.oxfmtrc.json`
+- Relevant repo files:
   - `package.json`
   - `.husky/pre-commit`
   - `.gitignore`
   - `.oxfmtrc.json`
 
-## Relationship between the entries
-
-- `husky_pre_commit_checks.md` protects the repo before commits land.
-- `changesets_and_github_actions_ci.md` governs the automated publish path after merges.
-- Together they establish a release process that is:
-  - locally validated,
-  - CI-driven,
-  - token-gated for npm publishing,
-  - and resilient against generated-state noise from `.brv/`.
+## Shared pattern across both areas
+- Both entries emphasize **automation that depends on repository configuration and tooling scripts** rather than ad hoc manual release steps.
+- Both preserve the repository’s generated/local state boundaries:
+  - `.brv/` excluded from Git/formatting
+  - release publishing gated by workflow permissions and secrets

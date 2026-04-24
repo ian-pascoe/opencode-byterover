@@ -3,19 +3,19 @@
     {
       "order": 3,
       "path": "_index.md",
-      "tokens": 641,
+      "tokens": 606,
       "type": "summary"
     },
     {
       "order": 2,
       "path": "release_management/_index.md",
-      "tokens": 660,
+      "tokens": 610,
       "type": "summary"
     },
     {
       "order": 1,
       "path": "release_management/ci/_index.md",
-      "tokens": 685,
+      "tokens": 680,
       "type": "summary"
     },
     {
@@ -27,6 +27,14 @@
       "type": "context"
     },
     {
+      "abstractPath": "release_management/ci/changesets_release_pr_convention.abstract.md",
+      "abstractTokens": 47,
+      "importance": 50,
+      "path": "release_management/ci/changesets_release_pr_convention.md",
+      "tokens": 47,
+      "type": "context"
+    },
+    {
       "abstractPath": "release_management/ci/husky_pre_commit_checks.abstract.md",
       "abstractTokens": 67,
       "importance": 50,
@@ -35,13 +43,13 @@
       "type": "context"
     }
   ],
-  "generated_at": "2026-04-24T13:24:29.436Z",
+  "generated_at": "2026-04-24T15:50:46.847Z",
   "lane_tokens": {
-    "contexts": 146,
+    "contexts": 193,
     "stubs": 0,
-    "summaries": 1986
+    "summaries": 1896
   },
-  "source_fingerprint": "f3bd467b1078e8717bfebf5e848ced38dcf75f294d733223f555dc7d28db0672",
-  "total_tokens": 2132,
+  "source_fingerprint": "2d72d81af571d7caee694c6b26e9b5cff54cd98cb2e3c08d5e58ff3e1761e91b",
+  "total_tokens": 2089,
   "version": 1
 }
