@@ -10,7 +10,7 @@
   "author": "Ian Pascoe",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ian-pascoe/opencode-byterover.git"
+    "url": "git+https://github.com/ian-pascoe/opencode-byterover.git"
   },
   "files": [
     "dist",
