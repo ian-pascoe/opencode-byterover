@@ -1,0 +1,47 @@
+{
+  "active_context": [
+    {
+      "order": 3,
+      "path": "_index.md",
+      "tokens": 641,
+      "type": "summary"
+    },
+    {
+      "order": 2,
+      "path": "release_management/_index.md",
+      "tokens": 660,
+      "type": "summary"
+    },
+    {
+      "order": 1,
+      "path": "release_management/ci/_index.md",
+      "tokens": 685,
+      "type": "summary"
+    },
+    {
+      "abstractPath": "release_management/ci/changesets_and_github_actions_ci.abstract.md",
+      "abstractTokens": 79,
+      "importance": 50,
+      "path": "release_management/ci/changesets_and_github_actions_ci.md",
+      "tokens": 79,
+      "type": "context"
+    },
+    {
+      "abstractPath": "release_management/ci/husky_pre_commit_checks.abstract.md",
+      "abstractTokens": 67,
+      "importance": 50,
+      "path": "release_management/ci/husky_pre_commit_checks.md",
+      "tokens": 67,
+      "type": "context"
+    }
+  ],
+  "generated_at": "2026-04-24T13:24:29.436Z",
+  "lane_tokens": {
+    "contexts": 146,
+    "stubs": 0,
+    "summaries": 1986
+  },
+  "source_fingerprint": "f3bd467b1078e8717bfebf5e848ced38dcf75f294d733223f555dc7d28db0672",
+  "total_tokens": 2132,
+  "version": 1
+}

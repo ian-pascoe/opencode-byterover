@@ -1,12 +1,16 @@
 {
   "name": "opencode-byterover",
   "version": "0.0.1",
-  "description": "OpenCode Byterover Plugin",
+  "description": "OpenCode ByteRover Plugin",
+  "homepage": "https://github.com/ian-pascoe/opencode-byterover#readme",
+  "bugs": {
+    "url": "https://github.com/ian-pascoe/opencode-byterover/issues"
+  },
   "license": "MIT",
   "author": "Ian Pascoe",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ian-pascoe/opencode-byterover.git"
+    "url": "git+https://github.com/ian-pascoe/opencode-byterover.git"
   },
   "files": [
     "dist",
@@ -14,13 +18,21 @@
   ],
   "type": "module",
   "main": "dist/index.js",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
     "build": "rolldown -c",
+    "changeset": "changeset",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
-    "typecheck": "tsc --noEmit"
+    "release": "pnpm run build && changeset publish",
+    "typecheck": "tsc --noEmit",
+    "version-packages": "changeset version",
+    "prepare": "husky"
   },
   "dependencies": {
     "@byterover/brv-bridge": "^1.1.0",
@@ -29,7 +41,10 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^0.6.0",
+    "@changesets/cli": "^2.31.0",
     "@types/node": "^25.6.0",
+    "husky": "^9.1.7",
     "oxfmt": "^0.46.0",
     "oxlint": "^1.61.0",
     "rolldown": "1.0.0-rc.17",
