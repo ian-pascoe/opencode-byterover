@@ -1,0 +1,1 @@
+Changesets release PRs now use the conventional commit format `chore(release): v{version}`, with the workflow reading the bumped package version to align the PR title and commit message.
