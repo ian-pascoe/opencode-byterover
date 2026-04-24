@@ -1,0 +1,23 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    [
+      // "opencode-byterover",
+      "opencode-byterover@file://.", // Local plugin development
+      {
+        // "enabled": true,
+        // "brvPath": "/custom/path/to/brv",
+        // "searchTimeoutMs": 15000,
+        // "recallTimeoutMs": 15000,
+        // "persistTimeoutMs": 15000,
+        // "autoRecall": true,
+        // "autoPersist": true,
+        // "contextTagName": "byterover-context",
+        // "recallPrompt": "Recall relevant project context for the latest user request.",
+        // "persistPrompt": "Curate durable facts, decisions, preferences, and technical details.",
+        "maxRecallTurns": 5,
+        "maxRecallChars": 8192,
+      },
+    ],
+  ],
+}

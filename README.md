@@ -3,6 +3,7 @@
     <br/>
     <h3>opencode-byterover</h3>
     <p>ByteRover memory integration for OpenCode.</p>
+    <a href="https://www.npmjs.com/package/opencode-byterover"><img src="https://img.shields.io/npm/v/opencode-byterover?style=for-the-badge&logo=npm&label=npm&color=cb3837" alt="npm version" /></a>
     <br/>
     <br/>
 </div>
@@ -17,11 +18,12 @@ The plugin persists useful session context when sessions become idle or compact,
 
 The plugin accepts these optional settings:
 
-- `brvPath`: custom ByteRover CLI path. Defaults to `brv` (assuming it's in the system `PATH`).
 - `enabled`: enable or disable the plugin without removing it from config. Defaults to `true`.
-- `searchTimeoutMs`: ByteRover search timeout in milliseconds. Defaults to `10000`.
-- `recallTimeoutMs`: ByteRover recall timeout in milliseconds. Defaults to `10000`.
-- `persistTimeoutMs`: ByteRover persist timeout in milliseconds. Defaults to `10000`.
+- `brvPath`: custom ByteRover CLI path. Defaults to `brv` (assuming it's in the system `PATH`).
+- `searchTimeoutMs`: ByteRover search timeout in milliseconds. Defaults to `15000`.
+- `recallTimeoutMs`: ByteRover recall timeout in milliseconds. Defaults to `15000`.
+- `persistTimeoutMs`: ByteRover persist timeout in milliseconds. Defaults to `15000`.
+- `quiet`: suppress toast notifications for ByteRover operations. Defaults to `false`.
 - `autoRecall`: automatically recall and inject ByteRover context into prompts. Defaults to `true`.
 - `autoPersist`: automatically curate session turns into ByteRover. Defaults to `true`.
 - `contextTagName`: XML-style tag name used for injected recall context. Defaults to `byterover-context`.
@@ -40,7 +42,7 @@ The plugin accepts these optional settings:
       "opencode-byterover",
       {
         "enabled": true,
-        "brvPath": "/custom/path/to/brv",
+        "brvPath": "brv",
         "searchTimeoutMs": 15000,
         "recallTimeoutMs": 15000,
         "persistTimeoutMs": 15000,
@@ -49,8 +51,8 @@ The plugin accepts these optional settings:
         "contextTagName": "byterover-context",
         "recallPrompt": "Recall relevant project context for the latest user request.",
         "persistPrompt": "Curate durable facts, decisions, preferences, and technical details.",
-        "maxRecallTurns": 5,
-        "maxRecallChars": 8192
+        "maxRecallTurns": 3,
+        "maxRecallChars": 4096
       }
     ]
   ]

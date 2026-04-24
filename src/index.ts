@@ -26,9 +26,9 @@ _index.md
 const configDefaults = {
   enabled: true,
   brvPath: "brv",
-  searchTimeoutMs: 10_000,
-  recallTimeoutMs: 10_000,
-  persistTimeoutMs: 10_000,
+  searchTimeoutMs: 15_000,
+  recallTimeoutMs: 15_000,
+  persistTimeoutMs: 15_000,
   quiet: false,
   autoRecall: true,
   autoPersist: true,
