@@ -1,0 +1,39 @@
+{
+  "name": "opencode-byterover",
+  "version": "0.0.1",
+  "description": "OpenCode Byterover Plugin",
+  "license": "MIT",
+  "author": "Ian Pascoe",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ian-pascoe/opencode-byterover.git"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "rolldown -c",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@byterover/brv-bridge": "^1.1.0",
+    "@opencode-ai/plugin": "^1.14.22",
+    "@opencode-ai/sdk": "^1.14.22",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "oxfmt": "^0.46.0",
+    "oxlint": "^1.61.0",
+    "rolldown": "1.0.0-rc.17",
+    "typescript": "^6.0.3"
+  },
+  "packageManager": "pnpm@10.33.2"
+}
