@@ -18,9 +18,15 @@ The plugin persists useful session context when sessions become idle or compact,
 The plugin accepts these optional settings:
 
 - `brvPath`: custom ByteRover CLI path. Defaults to `brv` (assuming it's in the system `PATH`).
+- `enabled`: enable or disable the plugin without removing it from config. Defaults to `true`.
 - `searchTimeoutMs`: ByteRover search timeout in milliseconds. Defaults to `10000`.
 - `recallTimeoutMs`: ByteRover recall timeout in milliseconds. Defaults to `10000`.
 - `persistTimeoutMs`: ByteRover persist timeout in milliseconds. Defaults to `10000`.
+- `autoRecall`: automatically recall and inject ByteRover context into prompts. Defaults to `true`.
+- `autoPersist`: automatically curate session turns into ByteRover. Defaults to `true`.
+- `contextTagName`: XML-style tag name used for injected recall context. Defaults to `byterover-context`.
+- `recallPrompt`: custom instruction text used before the recent conversation sent to ByteRover recall.
+- `persistPrompt`: custom instruction text used before the conversation turn sent to ByteRover curation.
 - `maxRecallTurns`: maximum recent user turns used to resolve recall context. Defaults to `3`.
 - `maxRecallChars`: maximum recent conversation characters used for recall. Defaults to `4096`.
 
@@ -33,10 +39,16 @@ The plugin accepts these optional settings:
     [
       "opencode-byterover",
       {
+        "enabled": true,
         "brvPath": "/custom/path/to/brv",
         "searchTimeoutMs": 15000,
         "recallTimeoutMs": 15000,
         "persistTimeoutMs": 15000,
+        "autoRecall": true,
+        "autoPersist": true,
+        "contextTagName": "byterover-context",
+        "recallPrompt": "Recall relevant project context for the latest user request.",
+        "persistPrompt": "Curate durable facts, decisions, preferences, and technical details.",
         "maxRecallTurns": 5,
         "maxRecallChars": 8192
       }

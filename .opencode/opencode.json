@@ -1,0 +1,12 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    [
+      "opencode-byterover@file://.",
+      {
+        "maxRecallChars": 8192,
+        "maxRecallTurns": 5
+      }
+    ]
+  ]
+}
