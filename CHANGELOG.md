@@ -1,5 +1,11 @@
 # opencode-byterover
 
+## 0.1.3
+
+### Patch Changes
+
+- [#13](https://github.com/ian-pascoe/opencode-byterover/pull/13) [`cf726b6`](https://github.com/ian-pascoe/opencode-byterover/commit/cf726b62e5471d4ebb8c29c4a2fef918f171dfdb) Thanks [@ian-pascoe](https://github.com/ian-pascoe)! - Bound curated-turn dedupe state with a per-plugin LRU cache to prevent unbounded session growth.
+
 ## 0.1.2
 
 ### Patch Changes
