@@ -126,18 +126,8 @@ describe("ByteroverPlugin", () => {
     });
   });
 
-  test("recalls only recent substantive turns and injects returned context", async () => {
-    const { bridge, hooks } = await createPlugin(
-      [
-        message("u1", "user", "old question"),
-        message("a1", "assistant", "old answer"),
-        message("u2", "user", "middle question"),
-        message("a2", "assistant", "middle answer"),
-        message("empty", "assistant", "   "),
-        message("u3", "user", "latest question"),
-      ],
-      { maxRecallTurns: 2 },
-    );
+  test("recalls and injects returned context", async () => {
+    const { bridge, hooks } = await createPlugin([message("u3", "user", "latest question")]);
     const system: Array<string> = [];
     const transform = hooks["experimental.chat.system.transform"];
 
@@ -146,11 +136,7 @@ describe("ByteroverPlugin", () => {
 
     expect(bridge?.recall).toHaveBeenCalledTimes(1);
     const query = bridge?.recall.mock.calls[0]?.[0] as string;
-    expect(query).toContain("[user]: middle question");
-    expect(query).toContain("[assistant]: middle answer");
     expect(query).toContain("[user]: latest question");
-    expect(query).not.toContain("old question");
-    expect(query).not.toContain("old answer");
     expect(system).toEqual(["<byterover-context>\nremembered context\n</byterover-context>"]);
   });
 
@@ -166,40 +152,6 @@ describe("ByteroverPlugin", () => {
 
     expect(bridge?.recall).not.toHaveBeenCalled();
     expect(system).toEqual([]);
-  });
-
-  test("uses a custom context tag name for recalled context", async () => {
-    const { hooks } = await createPlugin([message("u9", "user", "latest question")], {
-      contextTagName: "project-memory",
-    });
-    const system: Array<string> = [];
-    const transform = hooks["experimental.chat.system.transform"];
-
-    expect(transform).toBeDefined();
-    await transform!({ sessionID: "recall-session", model: {} as never }, { system });
-
-    expect(system).toEqual(["<project-memory>\nremembered context\n</project-memory>"]);
-  });
-
-  test("strips echoed recall query from ByteRover summary before injecting context", async () => {
-    const { bridge, hooks } = await createPlugin([message("u5", "user", "latest question")]);
-    bridge?.recall.mockImplementation(async (query: string) => ({
-      content:
-        `**Summary**: Found 1 relevant topic for "${query}":\n\n` +
-        `**Details**:\n\n### useful_context\n\nKeep this recalled context.`,
-    }));
-    const system: Array<string> = [];
-    const transform = hooks["experimental.chat.system.transform"];
-
-    expect(transform).toBeDefined();
-    await transform!({ sessionID: "recall-session", model: {} as never }, { system });
-
-    expect(system).toHaveLength(1);
-    expect(system[0]).toContain("**Summary**: Found 1 relevant topic:");
-    expect(system[0]).toContain("Keep this recalled context.");
-    expect(system[0]).not.toContain("Recall any relevant context");
-    expect(system[0]).not.toContain("Recent conversation:");
-    expect(system[0]).not.toContain("[user]: latest question");
   });
 
   test("uses a custom recall prompt before the recent conversation block", async () => {

@@ -1,102 +1,25 @@
 import type { Plugin } from "@opencode-ai/plugin";
-import type { Message, Part } from "@opencode-ai/sdk";
 import { BrvBridge } from "@byterover/brv-bridge";
 import { access, mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import * as z from "zod/v4";
-
-const brvGitignore = `# Dream state and logs
-dream-log/
-dream-state.json
-dream.lock
-
-# Review backups
-review-backups/
-
-# Generated files
-config.json
-_queue_status.json
-.snapshot.json
-_manifest.json
-_index.md
-*.abstract.md
-*.overview.md
-`;
-
-const configDefaults = {
-  enabled: true,
-  brvPath: "brv",
-  searchTimeoutMs: 15_000,
-  recallTimeoutMs: 15_000,
-  persistTimeoutMs: 15_000,
-  quiet: false,
-  autoRecall: true,
-  autoPersist: true,
-  contextTagName: "byterover-context",
-  recallPrompt:
-    `Recall any relevant context that would help answer the latest user message.\n` +
-    `Use the recent conversation only to resolve references and intent.\n` +
-    `Do not restate the query in your findings.`,
-  persistPrompt:
-    `The following is a conversation between a user and an AI assistant.\n` +
-    `Curate only information with lasting value: facts, decisions, technical details, preferences, or notable outcomes.\n` +
-    `Skip trivial messages such as greetings, acknowledgments ("ok", "thanks", "sure", "got it"), one-word replies, anything with no substantive content.`,
-  maxRecallTurns: 3,
-  maxRecallChars: 4096,
-};
-
-const ConfigSchema = z
-  .object({
-    enabled: z.boolean().default(configDefaults.enabled),
-    // BrvBridge options
-    brvPath: z.string().optional().default(configDefaults.brvPath),
-    searchTimeoutMs: z.number().default(configDefaults.searchTimeoutMs),
-    recallTimeoutMs: z.number().default(configDefaults.recallTimeoutMs),
-    persistTimeoutMs: z.number().default(configDefaults.persistTimeoutMs),
-    // Plugin options
-    quiet: z.boolean().default(configDefaults.quiet),
-    autoRecall: z.boolean().default(configDefaults.autoRecall),
-    autoPersist: z.boolean().default(configDefaults.autoPersist),
-    contextTagName: z.string().default(configDefaults.contextTagName),
-    recallPrompt: z.string().default(configDefaults.recallPrompt),
-    persistPrompt: z.string().default(configDefaults.persistPrompt),
-    maxRecallTurns: z.number().default(configDefaults.maxRecallTurns),
-    maxRecallChars: z.number().default(configDefaults.maxRecallChars),
-  })
-  .optional()
-  .default(configDefaults);
-
-type SessionMessage = { info: Message; parts: Array<Part> };
+import { brvGitignore, ConfigSchema, maxCuratedTurnCacheSize } from "./config.js";
+import { LruCache } from "./lru-cache.js";
+import {
+  formatMessages,
+  selectMessagesForRecall,
+  selectMessagesInTurn,
+  type SessionMessage,
+  turnKey,
+} from "./messages.js";
+import { stripEchoedRecallQuery } from "./recall.js";
 
 const hasCode = (error: unknown, code: string) => {
   return typeof error === "object" && error !== null && "code" in error && error.code === code;
 };
 
-const escapeRegExp = (value: string) => {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-};
-
-const stripEchoedRecallQuery = (content: string, query: string) => {
-  const trimmedContent = content.trim();
-  const trimmedQuery = query.trim();
-  if (trimmedQuery.length === 0) return trimmedContent;
-
-  return trimmedContent
-    .replace(
-      new RegExp(
-        `(\\*\\*Summary\\*\\*:[^\\n]*?)\\s+for\\s+"${escapeRegExp(trimmedQuery)}"(?=:)`,
-        "u",
-      ),
-      "$1",
-    )
-    .trim();
-};
-
-const state = {
-  curatedTurns: new Map<string, string>(),
-};
-
 export const ByteroverPlugin: Plugin = async ({ client, directory: cwd }, options) => {
+  const curatedTurns = new LruCache<string, string>(maxCuratedTurnCacheSize);
+
   const logBrv = (level: "debug" | "info" | "warn" | "error", message: string) => {
     client.app.log({
       body: {
@@ -178,58 +101,12 @@ export const ByteroverPlugin: Plugin = async ({ client, directory: cwd }, option
 
   const fetchMessagesInTurn = async (sessionID: string) => {
     const messages = await fetchSessionMessages(sessionID);
-    const messagesInTurn: Array<SessionMessage> = [];
-    for (let i = messages.length - 1; i >= 0; i--) {
-      const message = messages[i]!;
-      messagesInTurn.unshift(message);
-      if (message.info.role === "user") break;
-    }
-    return messagesInTurn;
-  };
-
-  const formatMessage = (message: SessionMessage) => {
-    const text = message.parts
-      .filter((part) => part.type === "text")
-      .map((part) => part.text.trim())
-      .filter(Boolean)
-      .join("\n");
-    if (!text) return "";
-    return `[${message.info.role}]: ${text}`;
-  };
-
-  const formatMessages = (messages: Array<SessionMessage>) => {
-    return messages.map(formatMessage).filter(Boolean).join("\n\n");
-  };
-
-  const turnKey = (messages: Array<SessionMessage>) => {
-    return messages.map((message) => message.info.id).join(":");
+    return selectMessagesInTurn(messages);
   };
 
   const fetchMessagesForRecall = async (sessionID: string) => {
     const messages = await fetchSessionMessages(sessionID);
-    const selected: typeof messages = [];
-    let userTurns = 0;
-    let charCount = 0;
-
-    for (let i = messages.length - 1; i >= 0; i--) {
-      const message = messages[i]!;
-      const formatted = formatMessage(message);
-      if (!formatted) continue;
-
-      const separatorLength = selected.length === 0 ? 0 : 2;
-      const nextCharCount = charCount + separatorLength + formatted.length;
-      if (selected.length > 0 && nextCharCount > config.maxRecallChars) break;
-
-      selected.unshift(message);
-      charCount = nextCharCount;
-
-      if (message.info.role === "user") {
-        userTurns++;
-        if (userTurns >= config.maxRecallTurns) break;
-      }
-    }
-
-    return selected;
+    return selectMessagesForRecall(messages, config);
   };
 
   const curateTurn = async (sessionID: string) => {
@@ -239,7 +116,7 @@ export const ByteroverPlugin: Plugin = async ({ client, directory: cwd }, option
     if (messagesInTurn.length === 0) return;
 
     const key = turnKey(messagesInTurn);
-    if (state.curatedTurns.get(sessionID) === key) {
+    if (curatedTurns.get(sessionID) === key) {
       logBrv("debug", `Skipping duplicate ByteRover curation for session ${sessionID}`);
       return;
     }
@@ -257,7 +134,7 @@ export const ByteroverPlugin: Plugin = async ({ client, directory: cwd }, option
       return;
     }
 
-    state.curatedTurns.set(sessionID, key);
+    curatedTurns.set(sessionID, key);
   };
 
   return {
