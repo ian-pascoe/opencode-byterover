@@ -1,2 +1,8 @@
 /dist
 /node_modules
+/.brv/_queue_status.json
+/.brv/config.json
+/.brv/dream-state.json
+/.brv/dream-log
+/.brv/dream.lock
+/.brv/review-backups/release_management/ci
