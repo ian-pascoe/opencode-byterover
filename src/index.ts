@@ -3,16 +3,28 @@ import type { Message, Part } from "@opencode-ai/sdk";
 import { BrvBridge } from "@byterover/brv-bridge";
 import * as z from "zod/v4";
 
-const Config = z.object({
-  // BrvBridge options
-  brvPath: z.string().optional(),
-  searchTimeoutMs: z.number().default(10_000),
-  recallTimeoutMs: z.number().default(10_000),
-  persistTimeoutMs: z.number().default(10_000),
-  // Plugin options
-  maxRecallTurns: z.number().default(3),
-  maxRecallChars: z.number().default(4096),
-});
+const defaults = {
+  brvPath: "brv",
+  searchTimeoutMs: 10_000,
+  recallTimeoutMs: 10_000,
+  persistTimeoutMs: 10_000,
+  maxRecallTurns: 3,
+  maxRecallChars: 4096,
+};
+
+const Config = z
+  .object({
+    // BrvBridge options
+    brvPath: z.string().optional().default(defaults.brvPath),
+    searchTimeoutMs: z.number().default(defaults.searchTimeoutMs),
+    recallTimeoutMs: z.number().default(defaults.recallTimeoutMs),
+    persistTimeoutMs: z.number().default(defaults.persistTimeoutMs),
+    // Plugin options
+    maxRecallTurns: z.number().default(defaults.maxRecallTurns),
+    maxRecallChars: z.number().default(defaults.maxRecallChars),
+  })
+  .optional()
+  .default(defaults);
 type Config = z.infer<typeof Config>;
 
 type SessionMessage = { info: Message; parts: Array<Part> };
@@ -21,7 +33,7 @@ const state = {
   curatedTurns: new Map<string, string>(),
 };
 
-export const ByteroverPlugin: Plugin = async ({ client, directory }, options) => {
+export const ByteroverPlugin: Plugin = async ({ client, directory: cwd }, options) => {
   const logBrv = (level: "debug" | "info" | "warn" | "error", message: string) => {
     client.app.log({
       body: {
@@ -44,16 +56,17 @@ export const ByteroverPlugin: Plugin = async ({ client, directory }, options) =>
   const config = configParseResult.data;
 
   const brvBridge = new BrvBridge({
-    cwd: directory,
+    brvPath: config.brvPath ?? "brv",
+    searchTimeoutMs: config.searchTimeoutMs,
+    recallTimeoutMs: config.recallTimeoutMs,
+    persistTimeoutMs: config.persistTimeoutMs,
+    cwd,
     logger: {
       debug: (message) => logBrv("debug", message),
       info: (message) => logBrv("info", message),
       warn: (message) => logBrv("warn", message),
       error: (message) => logBrv("error", message),
     },
-    searchTimeoutMs: config.searchTimeoutMs,
-    recallTimeoutMs: config.recallTimeoutMs,
-    persistTimeoutMs: config.persistTimeoutMs,
   });
 
   const fetchSessionMessages = async (sessionID: string): Promise<Array<SessionMessage>> => {
@@ -144,7 +157,7 @@ export const ByteroverPlugin: Plugin = async ({ client, directory }, options) =>
         `Curate only information with lasting value: facts, decisions, technical details, preferences, or notable outcomes.\n` +
         `Skip trivial messages such as greetings, acknowledgments ("ok", "thanks", "sure", "got it"), one-word replies, anything with no substantive content.\n\n` +
         `Conversation:\n\n---\n${formattedMessages}`,
-      { cwd: directory },
+      { cwd },
     );
     if (brvResult.status === "error") {
       logBrv("error", `Byterover process failed for session ${sessionID}: ${brvResult.message}`);
@@ -190,7 +203,7 @@ export const ByteroverPlugin: Plugin = async ({ client, directory }, options) =>
             `Use the recent conversation only to resolve references and intent.\n` +
             `Do not restate the query in your findings.\n\n` +
             `Recent conversation:\n\n---\n${formattedMessages}`,
-          { cwd: directory },
+          { cwd },
         );
         const content = brvResult.content.trim();
         if (content.length === 0) return;

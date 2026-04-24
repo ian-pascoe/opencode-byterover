@@ -51,6 +51,7 @@ The plugin accepts these optional settings:
 pnpm install
 pnpm format:check
 pnpm lint
+pnpm test
 pnpm typecheck
 pnpm build
 ```
