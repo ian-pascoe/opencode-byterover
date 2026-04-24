@@ -1,5 +1,11 @@
 # opencode-byterover
 
+## 0.1.2
+
+### Patch Changes
+
+- [#11](https://github.com/ian-pascoe/opencode-byterover/pull/11) [`4f6affc`](https://github.com/ian-pascoe/opencode-byterover/commit/4f6affc7eaafaed373e282ab007a5f71a1df4e2f) Thanks [@ian-pascoe](https://github.com/ian-pascoe)! - Add an npm package badge to the README and align the documented configuration defaults with the plugin defaults.
+
 ## 0.1.1
 
 ### Patch Changes
