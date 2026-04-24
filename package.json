@@ -24,6 +24,7 @@
   },
   "scripts": {
     "build": "rolldown -c",
+    "build:watch": "rolldown -c -w",
     "changeset": "changeset",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
