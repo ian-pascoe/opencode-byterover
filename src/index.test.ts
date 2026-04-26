@@ -1,12 +1,16 @@
 import type { PluginInput } from "@opencode-ai/plugin";
 import type { Message, Part } from "@opencode-ai/sdk";
+import { execFile } from "node:child_process";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { promisify } from "node:util";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { ByteroverPlugin } from "./index.js";
 
 type SessionMessage = { info: Message; parts: Array<Part> };
+
+const execFileAsync = promisify(execFile);
 
 const bridgeInstances = vi.hoisted(
   () =>
@@ -114,15 +118,42 @@ describe("ByteroverPlugin", () => {
     });
   });
 
-  test("does not overwrite an existing ByteRover gitignore", async () => {
+  test("preserves existing ByteRover gitignore rules while adding generated state ignores", async () => {
     await withTempDirectory(async (directory) => {
       const existing = "custom-rule\n";
+      await execFileAsync("git", ["init"], { cwd: directory });
       await mkdir(join(directory, ".brv"));
       await writeFile(join(directory, ".brv", ".gitignore"), existing, "utf8");
 
       await createPlugin([], undefined, directory);
+      await writeFile(join(directory, ".brv", "config.json"), "{}\n", "utf8");
 
-      await expect(readFile(join(directory, ".brv", ".gitignore"), "utf8")).resolves.toBe(existing);
+      const gitignore = await readFile(join(directory, ".brv", ".gitignore"), "utf8");
+      expect(gitignore).toContain(existing);
+      await expect(
+        execFileAsync("git", ["check-ignore", ".brv/config.json"], {
+          cwd: directory,
+        }),
+      ).resolves.toBeDefined();
+    });
+  });
+
+  test("does not ignore ByteRover context tree source files", async () => {
+    await withTempDirectory(async (directory) => {
+      await execFileAsync("git", ["init"], { cwd: directory });
+      await createPlugin([], undefined, directory);
+      await mkdir(join(directory, ".brv", "context-tree", "facts"), { recursive: true });
+      await writeFile(
+        join(directory, ".brv", "context-tree", "facts", "generated.md"),
+        "# Generated\n",
+        "utf8",
+      );
+
+      await expect(
+        execFileAsync("git", ["check-ignore", ".brv/context-tree/facts/generated.md"], {
+          cwd: directory,
+        }),
+      ).rejects.toMatchObject({ code: 1 });
     });
   });
 
