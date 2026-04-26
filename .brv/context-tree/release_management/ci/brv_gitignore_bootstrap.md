@@ -1,18 +1,18 @@
 ---
 title: BRV Gitignore Bootstrap
-summary: The BRV gitignore bootstrap now preserves custom .brv/.gitignore rules, ignores .brv/config.json, and keeps .brv/context-tree/**/*.md visible for durable memory.
+summary: Bootstrap now merges managed ignore rules into existing .brv/.gitignore while preserving custom rules; context-tree should remain tracked and not be ignored.
 tags: []
-related: [facts/project/context_tree_commit_policy.md, release_management/ci/git_ignore_state_verification.md]
+related: [facts/project/context_tree_commit_policy.md, release_management/ci/git_ignore_state_verification.md, facts/project/context.md, release_management/ci/repository_review_findings.md, release_management/ci/brv_gitignore_bootstrap.md]
 keywords: []
 createdAt: '2026-04-24T17:44:23.736Z'
-updatedAt: '2026-04-26T10:20:12.720Z'
+updatedAt: '2026-04-26T10:24:59.828Z'
 ---
 ## Reason
-Document the fix ensuring context-tree notes are not ignored while generated BRV state remains ignored
+Document the bootstrap and ignore-policy fix for .brv/.gitignore
 
 ## Raw Concept
 **Task:**
-Fix BRV gitignore bootstrap so durable context-tree knowledge is not ignored
+Fix ByteRover plugin .brv/.gitignore bootstrapping and reconcile the .brv/context-tree ignore policy with repo expectations.
 
 **Changes:**
 - Added a reference .brv/.gitignore template
@@ -23,14 +23,21 @@ Fix BRV gitignore bootstrap so durable context-tree knowledge is not ignored
 - Changed src/index.ts to upgrade existing .brv/.gitignore files instead of skipping them
 - Expanded src/index.test.ts to cover preserved custom rules and ignore behavior
 - Added .changeset/fix-brv-gitignore-bootstrap.md
+- Added ensureBrvGitignore merge strategy in src/index.ts
+- Added regression coverage in src/index.test.ts
+- Temporarily added context-tree/ to the ignore template, then planned its removal
+- Prepared a changeset entry for the gitignore bootstrap fix
 
 **Files:**
 - src/index.ts
 - src/index.test.ts
 - .changeset/fix-brv-gitignore-bootstrap.md
+- src/config.ts
+- .brv/.gitignore
+- .brv/context-tree/
 
 **Flow:**
-detect existing .brv/.gitignore -> append managed generated-state rules if missing -> verify context-tree markdown stays visible and generated state stays ignored
+inspect ignore behavior -> reproduce with git status and git check-ignore -> update bootstrap logic -> add regression tests -> verify with repo checks
 
 **Timestamp:** 2026-04-26
 
@@ -38,25 +45,27 @@ detect existing .brv/.gitignore -> append managed generated-state rules if missi
 
 ## Narrative
 ### Structure
-The update touches bootstrap logic in src/index.ts and adds regression coverage in src/index.test.ts for both preserved custom ignore rules and the visibility of context-tree markdown files.
+The repo uses a managed .brv/.gitignore bootstrap, but the merge behavior must preserve any pre-existing custom rules. The tracked .brv/context-tree knowledge files should remain visible in the repository rather than being hidden by generated-state ignore rules.
 
 ### Dependencies
-Relies on the .brv directory layout where config.json remains ignored while context-tree markdown files are intended to stay durable and accessible.
+The fix touches src/index.ts for bootstrap behavior, src/config.ts for the ignore template, and src/index.test.ts for regression coverage.
 
 ### Highlights
-Corrected the earlier diagnosis: .brv/context-tree/ is durable ByteRover memory, and the repo now explicitly proves it is not ignored. Verification completed successfully across formatting, linting, tests, typecheck, and build.
+A temporary context-tree/ ignore rule caused git check-ignore to hide tracked .brv/context-tree files, so the next step is to remove that rule and update tests accordingly.
 
 ### Rules
-context-tree/ is durable ByteRover memory in this repo, so my previous diagnosis was wrong. I’m removing that ignore rule and converting the regression to prove context-tree notes remain visible while generated/non-source ByteRover state is ignored.
+context-tree should not be ignored.
+Preserve existing custom .brv/.gitignore rules.
 
 ### Examples
-git status --short --ignored now shows new .brv/context-tree/**/*.md files as untracked (??), not ignored, while generated state like .brv/config.json remains ignored.
+Verified ignored paths included .brv/context-tree/facts/project/repository_checkout_location.md and two release_management/ci context-tree files.
 
 ## Facts
-- **context_tree_ignore_policy**: context-tree/ should not be ignored because it is durable ByteRover memory in this repo [project]
-- **brv_gitignore_bootstrap_behavior**: The fix upgrades an existing .brv/.gitignore by appending missing managed generated-state rules instead of doing nothing when the file already exists [project]
-- **brv_gitignore_custom_rules**: The regression test verifies existing custom .brv/.gitignore rules are preserved [project]
-- **brv_config_ignore_rule**: The regression test verifies .brv/config.json is ignored [project]
-- **context_tree_markdown_ignore_rule**: The regression test verifies .brv/context-tree/**/*.md is not ignored [project]
-- **changeset_file**: A patch changeset was added at .changeset/fix-brv-gitignore-bootstrap.md [project]
-- **verification_commands**: Verification passed with pnpm format:check, pnpm lint, pnpm test, pnpm typecheck, and pnpm build [project]
+- **brv_gitignore_bootstrap_goal**: The goal was to fix ByteRover plugin .brv/.gitignore bootstrapping and align ignore behavior with repo expectations. [project]
+- **context_tree_ignore_policy**: context-tree should not be ignored. [convention]
+- **brv_gitignore_custom_rules**: Existing custom .brv/.gitignore rules must be preserved. [convention]
+- **bootstrap_merge_strategy**: Bootstrap logic in src/index.ts was changed to merge missing ignore rules into existing .brv/.gitignore. [project]
+- **context_tree_transient_ignore_rule**: context-tree/ was temporarily added to src/config.ts and .brv/.gitignore, then planned for removal to keep .brv/context-tree tracked. [project]
+- **ignore_regression_coverage**: Regression coverage was added in src/index.test.ts to verify ignore behavior. [project]
+- **verification_commands**: The change was verified with pnpm format:check, pnpm lint, pnpm test, pnpm typecheck, and pnpm build. [project]
+- **git_check_ignore_results**: git check-ignore returned .brv/context-tree/facts/project/repository_checkout_location.md, .brv/context-tree/release_management/ci/awesome_opencode_plugin_pr.md, and .brv/context-tree/release_management/ci/ecosystem_docs_update_pr.md when context-tree/ was ignored. [project]

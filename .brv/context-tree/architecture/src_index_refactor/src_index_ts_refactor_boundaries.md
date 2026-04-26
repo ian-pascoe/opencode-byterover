@@ -1,18 +1,18 @@
 ---
-title: src/index.ts Refactor Boundaries
-summary: Refactor split config, message selection/formatting, recall sanitization, and LRU cache into separate modules while keeping hook orchestration in src/index.ts, with full verification passing.
+title: Src Index TS Refactor Boundaries
+summary: Recommendations to tighten config validation, add persist error handling and readiness checks, prevent duplicate concurrent curation, and improve packaging metadata
 tags: []
 related: [facts/project/context.md, architecture/src_index_refactor/src_index_ts_refactor_boundaries.md]
 keywords: []
 createdAt: '2026-04-24T19:08:23.501Z'
-updatedAt: '2026-04-24T19:12:00.072Z'
+updatedAt: '2026-04-26T10:26:14.508Z'
 ---
 ## Reason
-Document the durable refactor boundaries and verification outcomes from the module split
+Capture repo-specific recommendations about src/index.ts and src/config.ts improvements
 
 ## Raw Concept
 **Task:**
-Refactor the OpenCode plugin entrypoint into focused modules while preserving behavior
+Document prioritized improvements for the plugin surface and tests
 
 **Changes:**
 - Extracted config defaults, schema, and ByteRover gitignore bootstrap content into src/config.ts
@@ -26,6 +26,11 @@ Refactor the OpenCode plugin entrypoint into focused modules while preserving be
 - Extracted bounded LRU cache helper into src/lru-cache.ts
 - Moved echoed recall query stripping into src/recall.ts
 - Kept src/index.ts focused on OpenCode hook orchestration, bridge setup, logging/toasts, and orchestration
+- Tighten config validation in src/config.ts
+- Add error handling and readiness checks around persistence in src/index.ts
+- Prevent duplicate concurrent curation with an in-flight cache
+- Add published type metadata and package exports
+- Add failure-path and concurrency regression tests
 
 **Files:**
 - src/index.ts
@@ -34,49 +39,29 @@ Refactor the OpenCode plugin entrypoint into focused modules while preserving be
 - src/lru-cache.ts
 - src/recall.ts
 - .brv/context-tree/architecture/src_index_refactor/
+- src/index.test.ts
+- tsconfig.json
+- package.json
 
 **Flow:**
-plugin entrypoint -> config/schema + message helpers + cache helper + recall sanitizer -> index.ts orchestration -> verification
+inspect plugin surface -> identify gaps -> prioritize fixes -> add tests and packaging metadata
 
-**Timestamp:** 2026-04-24T19:11:54.761Z
+**Timestamp:** 2026-04-26
 
 **Author:** assistant
 
 ## Narrative
 ### Structure
-The refactor separates stable pure modules from the plugin entrypoint. src/index.ts now owns hook wiring and orchestration, while the supporting behavior lives in dedicated modules for config, message handling, caching, and recall sanitization.
+The recommendations focus on validation in src/config.ts, runtime safety in src/index.ts, test coverage for failure paths, and package metadata in package.json and tsconfig.json.
 
 ### Dependencies
-The change depends on preserving the existing cache behavior and maintaining the same test expectations after the split.
+Persist behavior depends on brvBridge.persist() and brvBridge.ready(); concurrency safety depends on session.idle and experimental.session.compacting not double-invoking curateTurn.
 
 ### Highlights
-Verification completed successfully with pnpm format:check, pnpm lint, pnpm test (14 tests), pnpm typecheck, and pnpm build.
+Highest-value changes were identified as config validation, persist error handling/readiness, concurrent curation dedupe, and packaging types/exports.
 
 ### Rules
-Best split:
-
-- `src/config.ts`
-  Config defaults, schema, and ByteRover gitignore bootstrap content.
-
-- `src/messages.ts`
-  `SessionMessage`, `formatMessage`, `formatMessages`, `turnKey`, recall/turn selection helpers if they stay pure.
-
-- `src/lru-cache.ts`
-  Small bounded cache helper, tested directly or indirectly.
-
-- `src/recall.ts`
-  Recall-response sanitization helpers.
-
-Keep in `src/index.ts`:
-- OpenCode plugin entrypoint
-- Hook wiring
-- Bridge construction
-- Toast/log adapters
-- High-level orchestration
-
-I’d avoid extracting `curateTurn` and recall hook logic into separate service classes right now. The file is still readable, and over-splitting would make the plugin harder to follow. The useful boundary is “pure reusable pieces out, hook flow stays in.”
-
-If we do it, I’d make it a refactor-only commit with no behavior changes, after the cache fix is committed.
+Add an in-flight turn cache/map so the same turn is only curated once at a time. Recall has a try/catch, but curateTurn does not. Check bridge readiness before persist.
 
 ### Examples
-The split explicitly preserves hook orchestration in src/index.ts while moving stable logic into smaller modules.
+Invalid config values to test include maxRecallTurns: 0, contextTagName: "bad tag", and persistTimeoutMs: -1.
