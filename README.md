@@ -14,6 +14,39 @@
 
 The plugin persists useful session context when sessions become idle or compact, then recalls relevant context during system prompt transformation.
 
+## Prerequisites
+
+- OpenCode with plugin support enabled.
+- ByteRover CLI installed and available as `brv`, or a custom executable path configured with `brvPath`.
+- ByteRover initialized for the project you want OpenCode to use as memory.
+
+Verify the CLI is reachable before enabling the plugin:
+
+```bash
+brv --help
+```
+
+## Installation
+
+Add the plugin to your OpenCode configuration:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": ["opencode-byterover"]
+}
+```
+
+For custom settings, use the tuple form shown below.
+
+## Verify Setup
+
+After starting OpenCode in a repository with the plugin enabled:
+
+- `.brv/.gitignore` should be created or updated with an `opencode-byterover` managed block.
+- OpenCode logs should include entries with `service: "byterover"`.
+- If ByteRover is unavailable, OpenCode should show a warning toast unless `quiet` is enabled.
+
 ## Configuration
 
 The plugin accepts these optional settings:
@@ -31,6 +64,8 @@ The plugin accepts these optional settings:
 - `persistPrompt`: custom instruction text used before the conversation turn sent to ByteRover curation.
 - `maxRecallTurns`: maximum recent user turns used to resolve recall context. Defaults to `3`.
 - `maxRecallChars`: maximum recent conversation characters used for recall. Defaults to `4096`.
+
+Numeric timeout and limit values must be positive integers. `brvPath`, `recallPrompt`, and `persistPrompt` must be non-empty strings. `contextTagName` must be a simple XML-style tag name such as `byterover-context`.
 
 ### Example
 

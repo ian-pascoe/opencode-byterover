@@ -1,6 +1,9 @@
 import * as z from "zod/v4";
 
-export const brvGitignore = `# Dream state and logs
+export const brvGitignoreBeginMarker = "# BEGIN opencode-byterover";
+export const brvGitignoreEndMarker = "# END opencode-byterover";
+
+export const brvGitignoreRules = `# Dream state and logs
 dream-log/
 dream-state.json
 dream.lock
@@ -17,6 +20,8 @@ _index.md
 *.abstract.md
 *.overview.md
 `;
+
+export const brvGitignore = `${brvGitignoreBeginMarker}\n${brvGitignoreRules}${brvGitignoreEndMarker}\n`;
 
 export const configDefaults = {
   enabled: true,
@@ -42,23 +47,28 @@ export const configDefaults = {
 
 export const maxCuratedTurnCacheSize = 500;
 
+const positiveInteger = () => z.number().finite().int().positive();
+const nonEmptyString = () => z.string().trim().min(1);
+
 export const ConfigSchema = z
   .object({
     enabled: z.boolean().default(configDefaults.enabled),
     // BrvBridge options
-    brvPath: z.string().optional().default(configDefaults.brvPath),
-    searchTimeoutMs: z.number().default(configDefaults.searchTimeoutMs),
-    recallTimeoutMs: z.number().default(configDefaults.recallTimeoutMs),
-    persistTimeoutMs: z.number().default(configDefaults.persistTimeoutMs),
+    brvPath: nonEmptyString().optional().default(configDefaults.brvPath),
+    searchTimeoutMs: positiveInteger().default(configDefaults.searchTimeoutMs),
+    recallTimeoutMs: positiveInteger().default(configDefaults.recallTimeoutMs),
+    persistTimeoutMs: positiveInteger().default(configDefaults.persistTimeoutMs),
     // Plugin options
     quiet: z.boolean().default(configDefaults.quiet),
     autoRecall: z.boolean().default(configDefaults.autoRecall),
     autoPersist: z.boolean().default(configDefaults.autoPersist),
-    contextTagName: z.string().default(configDefaults.contextTagName),
-    recallPrompt: z.string().default(configDefaults.recallPrompt),
-    persistPrompt: z.string().default(configDefaults.persistPrompt),
-    maxRecallTurns: z.number().default(configDefaults.maxRecallTurns),
-    maxRecallChars: z.number().default(configDefaults.maxRecallChars),
+    contextTagName: nonEmptyString()
+      .regex(/^[A-Za-z][A-Za-z0-9._-]*$/u)
+      .default(configDefaults.contextTagName),
+    recallPrompt: nonEmptyString().default(configDefaults.recallPrompt),
+    persistPrompt: nonEmptyString().default(configDefaults.persistPrompt),
+    maxRecallTurns: positiveInteger().default(configDefaults.maxRecallTurns),
+    maxRecallChars: positiveInteger().default(configDefaults.maxRecallChars),
   })
   .optional()
   .default(configDefaults);

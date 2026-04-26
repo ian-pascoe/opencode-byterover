@@ -1,3 +1,4 @@
+# BEGIN opencode-byterover
 # Dream state and logs
 dream-log/
 dream-state.json
@@ -14,3 +15,4 @@ _manifest.json
 _index.md
 *.abstract.md
 *.overview.md
+# END opencode-byterover
