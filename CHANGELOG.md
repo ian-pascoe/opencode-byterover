@@ -1,5 +1,11 @@
 # opencode-byterover
 
+## 0.1.6
+
+### Patch Changes
+
+- [#20](https://github.com/ian-pascoe/opencode-byterover/pull/20) [`4e28547`](https://github.com/ian-pascoe/opencode-byterover/commit/4e285470d6bc3cf32fbdd7ad77828e56a4f6eaf2) Thanks [@ian-pascoe](https://github.com/ian-pascoe)! - Add manual `brv_recall`, `brv_search`, and `brv_persist` tools.
+
 ## 0.1.5
 
 ### Patch Changes
