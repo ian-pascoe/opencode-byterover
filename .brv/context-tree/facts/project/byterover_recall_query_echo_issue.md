@@ -1,10 +1,10 @@
 ---
-title: Byterover recall query echo issue
+createdAt: '2026-04-24T18:05:09.757Z'
+keywords: []
+related: [facts/project/injected_byterover_context_availability.md, facts/project/package_and_build_changes.md, facts/project/plugin_configuration_knobs.md, facts/project/configurable_recall_and_persist_prompts.md, facts/project/byterover_recall_query_echo_fix.md, facts/project/curated_turns_cache_bound.md, facts/project/conversation_fragment_pending_completion.md]
 summary: Recall results echo the full instruction/conversation because brvBridge.recall is called with the entire formatted prompt; fix by using a concise query and optionally stripping ByteRover boilerplate before injection.
 tags: []
-related: [facts/project/injected_byterover_context_availability.md]
-keywords: []
-createdAt: '2026-04-24T18:05:09.757Z'
+title: Byterover recall query echo issue
 updatedAt: '2026-04-24T18:05:09.757Z'
 ---
 ## Reason

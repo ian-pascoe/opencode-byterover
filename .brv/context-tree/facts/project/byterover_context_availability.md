@@ -1,10 +1,10 @@
 ---
-title: Byterover Context Availability
+createdAt: '2026-04-24T18:26:16.489Z'
+keywords: []
+related: [facts/project/injected_byterover_context_availability.md, facts/project/conversation_context_quoting_boundary.md]
 summary: The assistant confirmed it can see the full <byterover-context> block in the conversation, including all 5 topics in detail.
 tags: []
-related: []
-keywords: []
-createdAt: '2026-04-24T18:26:16.489Z'
+title: Byterover Context Availability
 updatedAt: '2026-04-24T18:26:16.489Z'
 ---
 ## Reason

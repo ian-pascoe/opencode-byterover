@@ -1,10 +1,10 @@
 ---
-title: BRV Gitignore Bootstrap
+createdAt: '2026-04-24T17:44:23.736Z'
+keywords: []
+related: [facts/project/context_tree_commit_policy.md, release_management/ci/git_ignore_state_verification.md, facts/project/context.md, release_management/ci/repository_review_findings.md, release_management/ci/brv_gitignore_bootstrap.md]
 summary: Bootstrap now merges managed ignore rules into existing .brv/.gitignore while preserving custom rules; context-tree should remain tracked and not be ignored.
 tags: []
-related: [facts/project/context_tree_commit_policy.md, release_management/ci/git_ignore_state_verification.md, facts/project/context.md, release_management/ci/repository_review_findings.md, release_management/ci/brv_gitignore_bootstrap.md]
-keywords: []
-createdAt: '2026-04-24T17:44:23.736Z'
+title: BRV Gitignore Bootstrap
 updatedAt: '2026-04-26T10:24:59.828Z'
 ---
 ## Reason

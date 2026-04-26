@@ -1,10 +1,10 @@
 ---
-title: Changeset, Commit, and PR for README Badge Update
+createdAt: '2026-04-24T18:50:07.370Z'
+keywords: []
+related: [release_management/ci/readme_npm_badge_update.md]
 summary: 'Completed a patch release changeset for the README badge and config-default alignment, committed 6c4b5cf, pushed feat/more-config-options, and opened PR #11.'
 tags: []
-related: []
-keywords: []
-createdAt: '2026-04-24T18:50:07.370Z'
+title: Changeset, Commit, and PR for README Badge Update
 updatedAt: '2026-04-24T18:50:07.370Z'
 ---
 ## Reason

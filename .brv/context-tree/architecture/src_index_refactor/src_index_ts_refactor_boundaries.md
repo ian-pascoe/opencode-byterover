@@ -1,18 +1,18 @@
 ---
-title: Src Index TS Refactor Boundaries
-summary: Recommendations to tighten config validation, add persist error handling and readiness checks, prevent duplicate concurrent curation, and improve packaging metadata
-tags: []
-related: [facts/project/context.md, architecture/src_index_refactor/src_index_ts_refactor_boundaries.md]
-keywords: []
-createdAt: '2026-04-24T19:08:23.501Z'
-updatedAt: '2026-04-26T10:26:14.508Z'
+consolidated_at: '2026-04-26T11:05:11.118Z'
+consolidated_from:
+  - {date: '2026-04-26T11:05:11.118Z', path: architecture/src_index_refactor/context.md, reason: 'These files all describe the same src_index_refactor topic and the same refactor recommendations; the abstract and overview are derivative summaries of the detailed document, while context.md is the topic container for the same knowledge. They are overlapping rather than complementary, so they should be consolidated into the richer detailed file.'}
+  - {date: '2026-04-26T11:05:11.118Z', path: architecture/src_index_refactor/src_index_ts_refactor_boundaries.abstract.md, reason: 'These files all describe the same src_index_refactor topic and the same refactor recommendations; the abstract and overview are derivative summaries of the detailed document, while context.md is the topic container for the same knowledge. They are overlapping rather than complementary, so they should be consolidated into the richer detailed file.'}
+  - {date: '2026-04-26T11:05:11.118Z', path: architecture/src_index_refactor/src_index_ts_refactor_boundaries.overview.md, reason: 'These files all describe the same src_index_refactor topic and the same refactor recommendations; the abstract and overview are derivative summaries of the detailed document, while context.md is the topic container for the same knowledge. They are overlapping rather than complementary, so they should be consolidated into the richer detailed file.'}
 ---
+# Src Index TS Refactor Boundaries
+
 ## Reason
-Capture repo-specific recommendations about src/index.ts and src/config.ts improvements
+Capture repo-specific recommendations about src/index.ts and src/config.ts improvements.
 
 ## Raw Concept
 **Task:**
-Document prioritized improvements for the plugin surface and tests
+Document prioritized improvements for the plugin surface and tests.
 
 **Changes:**
 - Extracted config defaults, schema, and ByteRover gitignore bootstrap content into src/config.ts

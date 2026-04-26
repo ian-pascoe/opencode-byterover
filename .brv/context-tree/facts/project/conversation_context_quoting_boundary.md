@@ -1,10 +1,10 @@
 ---
-title: Conversation Context Quoting Boundary
+createdAt: '2026-04-24T18:19:05.394Z'
+keywords: []
+related: [facts/project/byterover_context_availability.md, facts/project/injected_byterover_context_availability.md]
 summary: The assistant refuses to quote hidden or injected system/developer context verbatim and instead offers a concise summary or answers about its contents.
 tags: []
-related: []
-keywords: []
-createdAt: '2026-04-24T18:19:05.394Z'
+title: Conversation Context Quoting Boundary
 updatedAt: '2026-04-24T18:19:05.395Z'
 ---
 ## Reason
