@@ -59,6 +59,7 @@ The plugin accepts these optional settings:
 - `quiet`: suppress toast notifications for ByteRover operations. Defaults to `false`.
 - `autoRecall`: automatically recall and inject ByteRover context into prompts. Defaults to `true`.
 - `autoPersist`: automatically curate session turns into ByteRover. Defaults to `true`.
+- `manualTools`: register manual ByteRover recall, search, and persist tools. Defaults to `true`.
 - `contextTagName`: XML-style tag name used for injected recall context. Defaults to `byterover-context`.
 - `recallPrompt`: custom instruction text used before the recent conversation sent to ByteRover recall.
 - `persistPrompt`: custom instruction text used before the conversation turn sent to ByteRover curation.
@@ -66,6 +67,16 @@ The plugin accepts these optional settings:
 - `maxRecallChars`: maximum recent conversation characters used for recall. Defaults to `4096`.
 
 Numeric timeout and limit values must be positive integers. `brvPath`, `recallPrompt`, and `persistPrompt` must be non-empty strings. `contextTagName` must be a simple XML-style tag name such as `byterover-context`.
+
+## Manual Tools
+
+When `manualTools` is enabled, the plugin exposes three OpenCode tools:
+
+- `brv_recall`: asks ByteRover to synthesize relevant memory for a raw query.
+- `brv_search`: performs ranked file-level ByteRover memory search with optional `limit` and `scope` arguments.
+- `brv_persist`: persists raw memory text directly into ByteRover without automatic curation prompt wrapping.
+
+Use manual recall or search when the agent needs context on demand. Use manual persist when there is a durable fact, decision, preference, or technical detail that should be saved immediately instead of waiting for idle-session curation.
 
 ### Example
 
@@ -83,6 +94,7 @@ Numeric timeout and limit values must be positive integers. `brvPath`, `recallPr
         "persistTimeoutMs": 15000,
         "autoRecall": true,
         "autoPersist": true,
+        "manualTools": true,
         "contextTagName": "byterover-context",
         "recallPrompt": "Recall relevant project context for the latest user request.",
         "persistPrompt": "Curate durable facts, decisions, preferences, and technical details.",

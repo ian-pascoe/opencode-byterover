@@ -1,5 +1,6 @@
 import type { PluginInput } from "@opencode-ai/plugin";
 import type { Message, Part } from "@opencode-ai/sdk";
+import type { ToolContext } from "@opencode-ai/plugin";
 import { execFile } from "node:child_process";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -30,6 +31,7 @@ const bridgeInstances = vi.hoisted(
       config: Record<string, unknown>;
       ready: ReturnType<typeof vi.fn>;
       recall: ReturnType<typeof vi.fn>;
+      search: ReturnType<typeof vi.fn>;
       persist: ReturnType<typeof vi.fn>;
     }>,
 );
@@ -39,6 +41,7 @@ vi.mock("@byterover/brv-bridge", () => {
     config: Record<string, unknown>;
     ready = vi.fn(async () => true);
     recall = vi.fn(async () => ({ content: "remembered context" }));
+    search = vi.fn(async () => ({ results: [], totalFound: 0, message: "No matches" }));
     persist = vi.fn(async () => ({ status: "completed", message: "ok" }));
 
     constructor(config: Record<string, unknown>) {
@@ -56,6 +59,19 @@ const message = (id: string, role: "user" | "assistant", text: string): SessionM
   info: { id, role } as Message,
   parts: [textPart(text)],
 });
+
+const toolContext = (overrides: Partial<ToolContext> = {}) =>
+  ({
+    sessionID: "tool-session",
+    messageID: "tool-message",
+    agent: "build",
+    directory: "/repo",
+    worktree: "/repo",
+    abort: new AbortController().signal,
+    metadata: vi.fn(),
+    ask: vi.fn(),
+    ...overrides,
+  }) as unknown as ToolContext;
 
 const createPlugin = async (
   messages: Array<SessionMessage>,
@@ -116,6 +132,22 @@ describe("ByteroverPlugin", () => {
 
     expect(hooks).toEqual({});
     expect(bridgeInstances).toHaveLength(0);
+  });
+
+  test("registers manual ByteRover tools by default", async () => {
+    const { hooks } = await createPlugin([]);
+
+    expect(Object.keys(hooks.tool ?? {}).sort()).toEqual([
+      "brv_persist",
+      "brv_recall",
+      "brv_search",
+    ]);
+  });
+
+  test("omits manual ByteRover tools when manualTools is disabled", async () => {
+    const { hooks } = await createPlugin([], { manualTools: false });
+
+    expect(hooks.tool).toBeUndefined();
   });
 
   test("bootstraps the ByteRover gitignore during setup", async () => {
@@ -248,6 +280,85 @@ describe("ByteroverPlugin", () => {
       "Find durable project context only.\n\n" +
         "Recent conversation:\n\n---\n[user]: custom recall target",
     );
+  });
+
+  test("manual recall passes raw query and returns cleaned context", async () => {
+    const { bridge, hooks } = await createPlugin([]);
+    bridge?.recall.mockResolvedValue({
+      content: '**Summary**: useful context for "manual query": details',
+    });
+    const abort = new AbortController();
+
+    const result = await hooks.tool!.brv_recall!.execute(
+      { query: "manual query" },
+      toolContext({ directory: "/workspace", abort: abort.signal }),
+    );
+
+    expect(bridge?.recall).toHaveBeenCalledWith("manual query", {
+      cwd: "/workspace",
+      signal: abort.signal,
+    });
+    expect(result).toBe("**Summary**: useful context: details");
+  });
+
+  test("manual recall reports when ByteRover is not ready", async () => {
+    const { bridge, hooks } = await createPlugin([]);
+    bridge?.ready.mockResolvedValue(false);
+
+    const result = await hooks.tool!.brv_recall!.execute({ query: "manual query" }, toolContext());
+
+    expect(bridge?.recall).not.toHaveBeenCalled();
+    expect(result).toBe("ByteRover bridge is not ready.");
+  });
+
+  test("manual search passes options and formats ranked results", async () => {
+    const { bridge, hooks } = await createPlugin([]);
+    bridge?.search.mockResolvedValue({
+      totalFound: 1,
+      message: "Found 1 match",
+      results: [
+        {
+          path: "architecture/plugin-tools.md",
+          title: "Plugin tools",
+          excerpt: "Manual tools expose ByteRover memory.",
+          score: 0.92,
+          symbolKind: "topic",
+          backlinkCount: 3,
+          relatedPaths: ["architecture/hooks.md"],
+        },
+      ],
+    });
+
+    const result = await hooks.tool!.brv_search!.execute(
+      { query: "manual tools", limit: 5, scope: "architecture" },
+      toolContext({ directory: "/workspace" }),
+    );
+
+    expect(bridge?.search).toHaveBeenCalledWith("manual tools", {
+      cwd: "/workspace",
+      limit: 5,
+      scope: "architecture",
+    });
+    expect(result).toContain("Found 1 ByteRover result");
+    expect(result).toContain("architecture/plugin-tools.md");
+    expect(result).toContain("score: 0.92");
+    expect(result).toContain("related: architecture/hooks.md");
+  });
+
+  test("manual persist stores raw memory text without curation prompt", async () => {
+    const { bridge, hooks } = await createPlugin([]);
+
+    const result = await hooks.tool!.brv_persist!.execute(
+      { context: "Use pnpm for this repository." },
+      toolContext({ directory: "/workspace" }),
+    );
+
+    expect(bridge?.persist).toHaveBeenCalledWith("Use pnpm for this repository.", {
+      cwd: "/workspace",
+      detach: false,
+    });
+    expect(bridge?.persist.mock.calls[0]?.[0]).not.toContain("Conversation:");
+    expect(result).toBe("ByteRover persist completed: ok");
   });
 
   test("curates an idle turn once per unchanged session turn", async () => {
@@ -399,6 +510,7 @@ describe("ByteroverPlugin", () => {
     ["non-positive maxRecallTurns", { maxRecallTurns: 0 }],
     ["fractional maxRecallChars", { maxRecallChars: 10.5 }],
     ["negative persistTimeoutMs", { persistTimeoutMs: -1 }],
+    ["non-boolean manualTools", { manualTools: "yes" }],
     ["unsafe contextTagName", { contextTagName: "bad tag" }],
   ])("rejects invalid configuration: %s", async (_name, options) => {
     const { client, hooks } = await createPlugin([], options);
