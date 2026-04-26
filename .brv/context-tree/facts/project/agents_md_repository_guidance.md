@@ -1,10 +1,10 @@
 ---
-title: Agents Md Repository Guidance
+createdAt: '2026-04-24T18:54:58.460Z'
+keywords: []
+related: [release_management/ci/changesets_and_github_actions_ci.md, release_management/ci/husky_pre_commit_checks.md, facts/project/context.md, facts/project/repository_checkout_location.md, facts/project/context_tree_commit_policy.md, facts/conventions/brv_context_tree_files_must_be_committed.md]
 summary: Repository guidance for AGENTS.md covers verified commands, entrypoints, ByteRover state handling, CI/hook order differences, and release workflow conventions.
 tags: []
-related: [release_management/ci/changesets_and_github_actions_ci.md, release_management/ci/husky_pre_commit_checks.md, facts/project/context.md]
-keywords: []
-createdAt: '2026-04-24T18:54:58.460Z'
+title: Agents Md Repository Guidance
 updatedAt: '2026-04-24T18:56:11.897Z'
 ---
 ## Reason

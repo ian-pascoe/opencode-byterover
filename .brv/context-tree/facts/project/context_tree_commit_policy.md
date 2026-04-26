@@ -1,10 +1,10 @@
 ---
-title: Context Tree Commit Policy
+createdAt: '2026-04-24T18:50:56.318Z'
+keywords: []
+related: [facts/project/repository_checkout_location.md, facts/project/agents_md_repository_guidance.md, facts/conventions/brv_context_tree_files_must_be_committed.md]
 summary: .brv context-tree files should always be committed
 tags: []
-related: []
-keywords: []
-createdAt: '2026-04-24T18:50:56.318Z'
+title: Context Tree Commit Policy
 updatedAt: '2026-04-24T18:50:56.318Z'
 ---
 ## Reason

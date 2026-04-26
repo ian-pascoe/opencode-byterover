@@ -1,10 +1,10 @@
 ---
-title: Plugin Configuration Knobs
+createdAt: '2026-04-24T18:31:26.327Z'
+keywords: []
+related: [facts/project/package_and_build_changes.md, facts/project/configurable_recall_and_persist_prompts.md, facts/project/byterover_recall_query_echo_fix.md, facts/project/byterover_recall_query_echo_issue.md, facts/project/curated_turns_cache_bound.md, facts/project/conversation_fragment_pending_completion.md]
 summary: Plugin supports enabled, autoRecall, autoPersist, and contextTagName; defaults preserved and verified by 13 tests plus docs updates.
 tags: []
-related: []
-keywords: []
-createdAt: '2026-04-24T18:31:26.327Z'
+title: Plugin Configuration Knobs
 updatedAt: '2026-04-24T18:36:01.138Z'
 ---
 ## Reason

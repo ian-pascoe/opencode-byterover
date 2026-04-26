@@ -1,10 +1,10 @@
 ---
-title: Git Ignore State Verification
+createdAt: '2026-04-24T16:54:17.841Z'
+keywords: []
+related: [release_management/ci/repository_review_findings.md, release_management/ci/brv_gitignore_bootstrap.md]
 summary: Verified that newly ignored files were untracked from Git index while remaining on disk, with no tracked files matching current ignore rules.
 tags: []
-related: []
-keywords: []
-createdAt: '2026-04-24T16:54:17.841Z'
+title: Git Ignore State Verification
 updatedAt: '2026-04-24T16:54:17.841Z'
 ---
 ## Reason

@@ -1,10 +1,10 @@
 ---
-title: README npm badge update
+createdAt: '2026-04-24T18:47:51.133Z'
+keywords: []
+related: [release_management/ci/changesets_and_github_actions_ci.md, release_management/ci/changeset_commit_and_pr_for_readme_badge_update.md]
 summary: README header now includes a pretty npm badge linked to the package page for opencode-byterover
 tags: []
-related: [release_management/ci/changesets_and_github_actions_ci.md]
-keywords: []
-createdAt: '2026-04-24T18:47:51.133Z'
+title: README npm badge update
 updatedAt: '2026-04-24T18:47:51.133Z'
 ---
 ## Reason

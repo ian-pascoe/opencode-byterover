@@ -1,10 +1,10 @@
 ---
-title: Ecosystem Docs Update PR
+createdAt: '2026-04-26T10:11:04.400Z'
+keywords: []
+related: [release_management/ci/awesome_opencode_plugin_pr.md]
 summary: 'Used existing ~/code checkout, added opencode-byterover to ecosystem docs, created issue #24464 and PR #24465, and formatting passed.'
 tags: []
-related: []
-keywords: []
-createdAt: '2026-04-26T10:11:04.400Z'
+title: Ecosystem Docs Update PR
 updatedAt: '2026-04-26T10:11:04.400Z'
 ---
 ## Reason

@@ -1,10 +1,10 @@
 ---
-title: Repository Checkout Location
+createdAt: '2026-04-26T10:08:46.330Z'
+keywords: []
+related: [facts/project/agents_md_repository_guidance.md, facts/project/context_tree_commit_policy.md, facts/conventions/brv_context_tree_files_must_be_committed.md]
 summary: The user has a checkout in ~/code.
 tags: []
-related: []
-keywords: []
-createdAt: '2026-04-26T10:08:46.330Z'
+title: Repository Checkout Location
 updatedAt: '2026-04-26T10:08:46.400Z'
 ---
 ## Reason

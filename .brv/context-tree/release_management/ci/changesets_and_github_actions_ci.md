@@ -1,7 +1,7 @@
 ---
 createdAt: '2026-04-24T12:52:44.558Z'
 keywords: []
-related: [release_management/ci/changesets_and_github_actions_ci.md, release_management/ci/husky_pre_commit_checks.md, release_management/ci/changesets_and_github_actions_ci.abstract.md, release_management/ci/changesets_and_github_actions_ci.overview.md]
+related: [release_management/ci/changesets_and_github_actions_ci.md, release_management/ci/husky_pre_commit_checks.md, release_management/ci/changesets_and_github_actions_ci.abstract.md, release_management/ci/changesets_and_github_actions_ci.overview.md, release_management/ci/docs_commit_and_plugin_commit_workflow.md]
 summary: GitHub Actions publish flow requires NPM_TOKEN, enabled Actions, release PR permissions, and a changeset-driven merge process.
 tags: []
 title: Changesets and GitHub Actions CI

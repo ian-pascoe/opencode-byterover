@@ -1,10 +1,10 @@
 ---
-title: BRV Context Tree Files Must Be Committed
+createdAt: '2026-04-24T18:51:04.126Z'
+keywords: []
+related: [facts/project/repository_checkout_location.md, facts/project/agents_md_repository_guidance.md, facts/project/context_tree_commit_policy.md]
 summary: The repository convention is that .brv/context-tree files should always be committed, and they were committed in a docs-scoped commit.
 tags: []
-related: []
-keywords: []
-createdAt: '2026-04-24T18:51:04.126Z'
+title: BRV Context Tree Files Must Be Committed
 updatedAt: '2026-04-24T18:52:22.543Z'
 ---
 ## Reason

@@ -1,10 +1,10 @@
 ---
-title: Package and Build Changes
+createdAt: '2026-04-26T10:45:21.982Z'
+keywords: []
+related: [facts/project/plugin_configuration_knobs.md, facts/project/configurable_recall_and_persist_prompts.md, facts/project/byterover_recall_query_echo_fix.md, facts/project/byterover_recall_query_echo_issue.md, facts/project/curated_turns_cache_bound.md, facts/project/conversation_fragment_pending_completion.md]
 summary: Project updates cover stricter config validation, concurrent curation dedupe, managed .brv/.gitignore sentinel handling, package metadata and build pipeline changes, README improvements, and passing verification.
 tags: []
-related: []
-keywords: []
-createdAt: '2026-04-26T10:45:21.982Z'
+title: Package and Build Changes
 updatedAt: '2026-04-26T10:45:21.982Z'
 ---
 ## Reason
