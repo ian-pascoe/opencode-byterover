@@ -18,13 +18,24 @@
   ],
   "type": "module",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
   "publishConfig": {
     "access": "public",
     "provenance": true
   },
   "scripts": {
-    "build": "rolldown -c",
+    "build": "pnpm run clean && pnpm run build:js && pnpm run build:types",
+    "build:js": "rolldown -c",
+    "build:types": "tsc --project tsconfig.build.json --emitDeclarationOnly",
     "build:watch": "rolldown -c -w",
+    "clean": "rm -rf dist",
     "changeset": "changeset",
     "format": "oxfmt",
     "format:check": "oxfmt --check",

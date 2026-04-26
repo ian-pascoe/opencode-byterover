@@ -12,6 +12,18 @@ type SessionMessage = { info: Message; parts: Array<Part> };
 
 const execFileAsync = promisify(execFile);
 
+const countOccurrences = (value: string, search: string) => value.split(search).length - 1;
+
+const deferred = <T>() => {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+  return { promise, resolve, reject };
+};
+
 const bridgeInstances = vi.hoisted(
   () =>
     [] as Array<{
@@ -112,6 +124,8 @@ describe("ByteroverPlugin", () => {
 
       const gitignore = await readFile(join(directory, ".brv", ".gitignore"), "utf8");
       expect(gitignore).toContain("# Dream state and logs");
+      expect(gitignore).toContain("# BEGIN opencode-byterover");
+      expect(gitignore).toContain("# END opencode-byterover");
       expect(gitignore).toContain("dream-log/");
       expect(gitignore).toContain("review-backups/");
       expect(gitignore).toContain("*.overview.md");
@@ -120,7 +134,7 @@ describe("ByteroverPlugin", () => {
 
   test("preserves existing ByteRover gitignore rules while adding generated state ignores", async () => {
     await withTempDirectory(async (directory) => {
-      const existing = "custom-rule\n";
+      const existing = "custom-rule\n\n# ByteRover generated files\nconfig.json\n*.overview.md\n";
       await execFileAsync("git", ["init"], { cwd: directory });
       await mkdir(join(directory, ".brv"));
       await writeFile(join(directory, ".brv", ".gitignore"), existing, "utf8");
@@ -129,12 +143,46 @@ describe("ByteroverPlugin", () => {
       await writeFile(join(directory, ".brv", "config.json"), "{}\n", "utf8");
 
       const gitignore = await readFile(join(directory, ".brv", ".gitignore"), "utf8");
-      expect(gitignore).toContain(existing);
+      expect(gitignore).toContain("custom-rule");
+      expect(gitignore).toContain("# BEGIN opencode-byterover");
+      expect(gitignore).toContain("# END opencode-byterover");
+      expect(gitignore).not.toContain("# ByteRover generated files");
+      expect(countOccurrences(gitignore, "config.json")).toBe(1);
+      expect(countOccurrences(gitignore, "*.overview.md")).toBe(1);
       await expect(
         execFileAsync("git", ["check-ignore", ".brv/config.json"], {
           cwd: directory,
         }),
       ).resolves.toBeDefined();
+    });
+  });
+
+  test("preserves custom gitignore overrides after managed ByteRover rules", async () => {
+    await withTempDirectory(async (directory) => {
+      await execFileAsync("git", ["init"], { cwd: directory });
+      await mkdir(join(directory, ".brv"));
+      await writeFile(
+        join(directory, ".brv", ".gitignore"),
+        "custom-before\nconfig.json\n!config.json\ncustom-after\n",
+        "utf8",
+      );
+
+      await createPlugin([], undefined, directory);
+      await writeFile(join(directory, ".brv", "config.json"), "{}\n", "utf8");
+
+      const gitignore = await readFile(join(directory, ".brv", ".gitignore"), "utf8");
+      expect(gitignore.indexOf("custom-before")).toBeLessThan(
+        gitignore.indexOf("# BEGIN opencode-byterover"),
+      );
+      expect(gitignore.indexOf("!config.json")).toBeGreaterThan(
+        gitignore.indexOf("# END opencode-byterover"),
+      );
+      expect(gitignore.indexOf("custom-after")).toBeGreaterThan(gitignore.indexOf("!config.json"));
+      await expect(
+        execFileAsync("git", ["check-ignore", ".brv/config.json"], {
+          cwd: directory,
+        }),
+      ).rejects.toMatchObject({ code: 1 });
     });
   });
 
@@ -221,6 +269,81 @@ describe("ByteroverPlugin", () => {
     expect(bridge?.persist.mock.calls[0]?.[0]).toContain("[user]: persist this decision");
   });
 
+  test("deduplicates concurrent curation for the same session turn", async () => {
+    const { bridge, hooks } = await createPlugin([
+      message("u4", "user", "persist this decision"),
+      message("a4", "assistant", "decision persisted"),
+    ]);
+    const event = hooks.event;
+    const compacting = hooks["experimental.session.compacting"];
+    const pendingPersist = deferred<{ status: "completed"; message: string }>();
+    bridge?.persist.mockReturnValue(pendingPersist.promise);
+
+    expect(event).toBeDefined();
+    expect(compacting).toBeDefined();
+    const idlePromise = event!({
+      event: { type: "session.idle", properties: { sessionID: "curation-session" } } as never,
+    });
+    let compactingResolved = false;
+    const compactingPromise = compacting!({ sessionID: "curation-session" }, { context: [] }).then(
+      () => {
+        compactingResolved = true;
+      },
+    );
+
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(bridge?.persist).toHaveBeenCalledTimes(1);
+    expect(compactingResolved).toBe(false);
+
+    pendingPersist.resolve({ status: "completed", message: "ok" });
+    await Promise.all([idlePromise, compactingPromise]);
+    expect(bridge?.persist).toHaveBeenCalledTimes(1);
+    expect(compactingResolved).toBe(true);
+  });
+
+  test("keeps newer in-flight curation marked when an older turn finishes first", async () => {
+    const messages = [message("u4", "user", "first decision")];
+    const { bridge, hooks } = await createPlugin(messages);
+    const event = hooks.event;
+    const compacting = hooks["experimental.session.compacting"];
+    const firstPersist = deferred<{ status: "completed"; message: string }>();
+    const secondPersist = deferred<{ status: "completed"; message: string }>();
+    bridge?.persist
+      .mockReturnValueOnce(firstPersist.promise)
+      .mockReturnValueOnce(secondPersist.promise)
+      .mockResolvedValue({ status: "completed", message: "ok" });
+
+    expect(event).toBeDefined();
+    expect(compacting).toBeDefined();
+    const firstPromise = event!({
+      event: { type: "session.idle", properties: { sessionID: "curation-session" } } as never,
+    });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    messages.splice(0, messages.length, message("u5", "user", "second decision"));
+    const secondPromise = event!({
+      event: { type: "session.idle", properties: { sessionID: "curation-session" } } as never,
+    });
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(bridge?.persist).toHaveBeenCalledTimes(2);
+
+    firstPersist.resolve({ status: "completed", message: "ok" });
+    await firstPromise;
+    const duplicateSecondPromise = compacting!({ sessionID: "curation-session" }, { context: [] });
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(bridge?.persist).toHaveBeenCalledTimes(2);
+
+    secondPersist.resolve({ status: "completed", message: "ok" });
+    await Promise.all([secondPromise, duplicateSecondPromise]);
+  });
+
   test("skips curation when autoPersist is disabled", async () => {
     const { bridge, hooks } = await createPlugin([message("u10", "user", "do not persist")], {
       autoPersist: false,
@@ -257,6 +380,28 @@ describe("ByteroverPlugin", () => {
 
   test("logs configuration errors without creating hooks or a bridge", async () => {
     const { client, hooks } = await createPlugin([], { recallTimeoutMs: "slow" });
+
+    expect(hooks).toEqual({});
+    expect(bridgeInstances).toHaveLength(0);
+    expect(client.app.log).toHaveBeenCalledWith({
+      body: expect.objectContaining({
+        level: "error",
+        service: "byterover",
+        message: expect.stringContaining("Invalid Byterover plugin configuration"),
+      }),
+    });
+  });
+
+  test.each([
+    ["empty brvPath", { brvPath: "" }],
+    ["blank recallPrompt", { recallPrompt: "   " }],
+    ["blank persistPrompt", { persistPrompt: "   " }],
+    ["non-positive maxRecallTurns", { maxRecallTurns: 0 }],
+    ["fractional maxRecallChars", { maxRecallChars: 10.5 }],
+    ["negative persistTimeoutMs", { persistTimeoutMs: -1 }],
+    ["unsafe contextTagName", { contextTagName: "bad tag" }],
+  ])("rejects invalid configuration: %s", async (_name, options) => {
+    const { client, hooks } = await createPlugin([], options);
 
     expect(hooks).toEqual({});
     expect(bridgeInstances).toHaveLength(0);

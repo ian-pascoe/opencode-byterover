@@ -2,7 +2,14 @@ import type { Plugin } from "@opencode-ai/plugin";
 import { BrvBridge } from "@byterover/brv-bridge";
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { brvGitignore, ConfigSchema, maxCuratedTurnCacheSize } from "./config.js";
+import {
+  brvGitignore,
+  brvGitignoreBeginMarker,
+  brvGitignoreEndMarker,
+  brvGitignoreRules,
+  ConfigSchema,
+  maxCuratedTurnCacheSize,
+} from "./config.js";
 import { LruCache } from "./lru-cache.js";
 import {
   formatMessages,
@@ -17,9 +24,57 @@ const hasCode = (error: unknown, code: string) => {
   return typeof error === "object" && error !== null && "code" in error && error.code === code;
 };
 
-const managedGitignoreRules = brvGitignore
-  .split("\n")
-  .filter((line) => line.length > 0 && !line.startsWith("#"));
+const escapeRegExp = (value: string) => {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+};
+
+const managedGitignoreRules = new Set(
+  brvGitignoreRules.split("\n").filter((line) => line.length > 0 && !line.startsWith("#")),
+);
+
+const managedGitignoreBlock = new RegExp(
+  `(?:^|\\r?\\n)${escapeRegExp(brvGitignoreBeginMarker)}[\\s\\S]*?${escapeRegExp(
+    brvGitignoreEndMarker,
+  )}\\r?\\n?`,
+  "gu",
+);
+
+const normalizeBrvGitignore = (existing: string) => {
+  const output: Array<string> = [];
+  let insertedManagedBlock = false;
+  let skippingManagedBlock = false;
+
+  const insertManagedBlock = () => {
+    if (insertedManagedBlock) return;
+    if (output.length > 0 && output[output.length - 1] !== "") output.push("");
+    output.push(...brvGitignore.trimEnd().split("\n"));
+    insertedManagedBlock = true;
+  };
+
+  for (const line of existing
+    .replace(managedGitignoreBlock, `\n${brvGitignore}\n`)
+    .split(/\r?\n/)) {
+    if (line === brvGitignoreBeginMarker) {
+      insertManagedBlock();
+      skippingManagedBlock = true;
+      continue;
+    }
+    if (skippingManagedBlock) {
+      if (line === brvGitignoreEndMarker) skippingManagedBlock = false;
+      continue;
+    }
+    if (line === "# ByteRover generated files" || managedGitignoreRules.has(line)) {
+      insertManagedBlock();
+      continue;
+    }
+    output.push(line);
+  }
+
+  while (output.length > 0 && output[output.length - 1] === "") output.pop();
+  if (!insertedManagedBlock) insertManagedBlock();
+
+  return `${output.join("\n")}\n`;
+};
 
 const ensureBrvGitignore = async (cwd: string) => {
   await access(cwd);
@@ -29,16 +84,9 @@ const ensureBrvGitignore = async (cwd: string) => {
 
   try {
     const existing = await readFile(gitignorePath, "utf8");
-    const existingRules = new Set(existing.split(/\r?\n/));
-    const missingRules = managedGitignoreRules.filter((rule) => !existingRules.has(rule));
-    if (missingRules.length === 0) return;
-
-    const separator = existing.endsWith("\n") ? "\n" : "\n\n";
-    await writeFile(
-      gitignorePath,
-      `${existing}${separator}# ByteRover generated files\n${missingRules.join("\n")}\n`,
-      "utf8",
-    );
+    const normalized = normalizeBrvGitignore(existing);
+    if (existing === normalized) return;
+    await writeFile(gitignorePath, normalized, "utf8");
   } catch (error) {
     if (!hasCode(error, "ENOENT")) throw error;
     await writeFile(gitignorePath, brvGitignore, "utf8");
@@ -47,6 +95,7 @@ const ensureBrvGitignore = async (cwd: string) => {
 
 export const ByteroverPlugin: Plugin = async ({ client, directory: cwd }, options) => {
   const curatedTurns = new LruCache<string, string>(maxCuratedTurnCacheSize);
+  const inFlightCurations = new Map<string, { key: string; promise: Promise<void> }>();
 
   const logBrv = (level: "debug" | "info" | "warn" | "error", message: string) => {
     client.app.log({
@@ -141,21 +190,39 @@ export const ByteroverPlugin: Plugin = async ({ client, directory: cwd }, option
       logBrv("debug", `Skipping duplicate ByteRover curation for session ${sessionID}`);
       return;
     }
+    const inFlightCuration = inFlightCurations.get(sessionID);
+    if (inFlightCuration?.key === key) {
+      logBrv("debug", `Skipping in-flight ByteRover curation for session ${sessionID}`);
+      await inFlightCuration.promise;
+      return;
+    }
 
     const formattedMessages = formatMessages(messagesInTurn);
     if (formattedMessages.length === 0) return;
 
-    const brvResult = await brvBridge.persist(
-      `${config.persistPrompt.trim()}\n\nConversation:\n\n---\n${formattedMessages}`,
-      { cwd },
-    );
-    if (brvResult.status === "error") {
-      toastBrv("error", "Failed to curate conversation turn, see logs for details");
-      logBrv("error", `Byterover process failed for session ${sessionID}: ${brvResult.message}`);
-      return;
-    }
+    const persistCuration = async () => {
+      const brvResult = await brvBridge.persist(
+        `${config.persistPrompt.trim()}\n\nConversation:\n\n---\n${formattedMessages}`,
+        { cwd },
+      );
+      if (brvResult.status === "error") {
+        toastBrv("error", "Failed to curate conversation turn, see logs for details");
+        logBrv("error", `Byterover process failed for session ${sessionID}: ${brvResult.message}`);
+        return;
+      }
 
-    curatedTurns.set(sessionID, key);
+      curatedTurns.set(sessionID, key);
+    };
+
+    const curationPromise = persistCuration();
+    inFlightCurations.set(sessionID, { key, promise: curationPromise });
+    try {
+      await curationPromise;
+    } finally {
+      if (inFlightCurations.get(sessionID)?.promise === curationPromise) {
+        inFlightCurations.delete(sessionID);
+      }
+    }
   };
 
   return {
