@@ -1,6 +1,6 @@
 import type { Plugin } from "@opencode-ai/plugin";
 import { BrvBridge } from "@byterover/brv-bridge";
-import { access, mkdir, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { brvGitignore, ConfigSchema, maxCuratedTurnCacheSize } from "./config.js";
 import { LruCache } from "./lru-cache.js";
@@ -15,6 +15,34 @@ import { stripEchoedRecallQuery } from "./recall.js";
 
 const hasCode = (error: unknown, code: string) => {
   return typeof error === "object" && error !== null && "code" in error && error.code === code;
+};
+
+const managedGitignoreRules = brvGitignore
+  .split("\n")
+  .filter((line) => line.length > 0 && !line.startsWith("#"));
+
+const ensureBrvGitignore = async (cwd: string) => {
+  await access(cwd);
+  await mkdir(join(cwd, ".brv"), { recursive: true });
+
+  const gitignorePath = join(cwd, ".brv", ".gitignore");
+
+  try {
+    const existing = await readFile(gitignorePath, "utf8");
+    const existingRules = new Set(existing.split(/\r?\n/));
+    const missingRules = managedGitignoreRules.filter((rule) => !existingRules.has(rule));
+    if (missingRules.length === 0) return;
+
+    const separator = existing.endsWith("\n") ? "\n" : "\n\n";
+    await writeFile(
+      gitignorePath,
+      `${existing}${separator}# ByteRover generated files\n${missingRules.join("\n")}\n`,
+      "utf8",
+    );
+  } catch (error) {
+    if (!hasCode(error, "ENOENT")) throw error;
+    await writeFile(gitignorePath, brvGitignore, "utf8");
+  }
 };
 
 export const ByteroverPlugin: Plugin = async ({ client, directory: cwd }, options) => {
@@ -56,18 +84,11 @@ export const ByteroverPlugin: Plugin = async ({ client, directory: cwd }, option
   };
 
   try {
-    await access(cwd);
-    await mkdir(join(cwd, ".brv"), { recursive: true });
-    await writeFile(join(cwd, ".brv", ".gitignore"), brvGitignore, {
-      encoding: "utf8",
-      flag: "wx",
-    });
+    await ensureBrvGitignore(cwd);
   } catch (error) {
-    if (!hasCode(error, "EEXIST")) {
-      const message = error instanceof Error ? error.message : String(error);
-      toastBrv("warning", "Failed to initialize ByteRover storage, some features may not work");
-      logBrv("warn", `Failed to bootstrap .brv/.gitignore: ${message}`);
-    }
+    const message = error instanceof Error ? error.message : String(error);
+    toastBrv("warning", "Failed to initialize ByteRover storage, some features may not work");
+    logBrv("warn", `Failed to bootstrap .brv/.gitignore: ${message}`);
   }
 
   const brvBridge = new BrvBridge({
