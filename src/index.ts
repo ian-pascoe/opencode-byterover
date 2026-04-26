@@ -1,5 +1,6 @@
-import type { Plugin } from "@opencode-ai/plugin";
+import { tool, type Plugin } from "@opencode-ai/plugin";
 import { BrvBridge } from "@byterover/brv-bridge";
+import type { SearchResultItem } from "@byterover/brv-bridge";
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
@@ -38,6 +39,34 @@ const managedGitignoreBlock = new RegExp(
   )}\\r?\\n?`,
   "gu",
 );
+
+const formatSearchResults = (
+  results: Array<SearchResultItem>,
+  totalFound: number,
+  message: string,
+) => {
+  if (results.length === 0) return message || "No ByteRover search results found.";
+
+  const header = `Found ${totalFound} ByteRover ${totalFound === 1 ? "result" : "results"}.`;
+  const lines = results.flatMap((result, index) => {
+    const details = [
+      `score: ${result.score}`,
+      result.symbolKind ? `kind: ${result.symbolKind}` : undefined,
+      result.backlinkCount === undefined ? undefined : `backlinks: ${result.backlinkCount}`,
+    ].filter(Boolean);
+    const output = [
+      `${index + 1}. ${result.title} (${result.path})`,
+      details.length > 0 ? `   ${details.join(", ")}` : undefined,
+      `   ${result.excerpt}`,
+    ];
+    if (result.relatedPaths && result.relatedPaths.length > 0) {
+      output.push(`   related: ${result.relatedPaths.join(", ")}`);
+    }
+    return output.filter((line) => line !== undefined);
+  });
+
+  return [header, ...lines].join("\n");
+};
 
 const normalizeBrvGitignore = (existing: string) => {
   const output: Array<string> = [];
@@ -225,7 +254,102 @@ export const ByteroverPlugin: Plugin = async ({ client, directory: cwd }, option
     }
   };
 
+  const ensureBridgeReady = async () => {
+    const isReady = await brvBridge.ready();
+    if (isReady) return true;
+    logBrv("warn", "Byterover bridge not ready for manual tool call");
+    return false;
+  };
+
+  const manualTools = config.manualTools
+    ? {
+        brv_recall: tool({
+          description: "Recall relevant context from ByteRover memory for a raw query.",
+          args: {
+            query: tool.schema.string().trim().min(1).describe("Raw recall query."),
+          },
+          execute: async ({ query }, context) => {
+            if (!(await ensureBridgeReady())) return "ByteRover bridge is not ready.";
+            try {
+              const brvResult = await brvBridge.recall(query, {
+                cwd: context.directory,
+                signal: context.abort,
+              });
+              const content = stripEchoedRecallQuery(brvResult.content, query);
+              return content || "No relevant ByteRover context found.";
+            } catch (error) {
+              const message = error instanceof Error ? error.message : String(error);
+              logBrv("error", `Manual ByteRover recall failed: ${message}`);
+              return `ByteRover recall failed: ${message}`;
+            }
+          },
+        }),
+        brv_search: tool({
+          description: "Search ByteRover memory for ranked file-level context results.",
+          args: {
+            query: tool.schema.string().trim().min(1).describe("Raw search query."),
+            limit: tool.schema
+              .number()
+              .int()
+              .min(1)
+              .max(50)
+              .optional()
+              .describe("Maximum number of results to return, from 1 to 50."),
+            scope: tool.schema
+              .string()
+              .trim()
+              .min(1)
+              .optional()
+              .describe("Optional ByteRover path prefix to scope search results."),
+          },
+          execute: async ({ query, limit, scope }, context) => {
+            if (!(await ensureBridgeReady())) return "ByteRover bridge is not ready.";
+            try {
+              const searchOptions = {
+                cwd: context.directory,
+                ...(limit === undefined ? {} : { limit }),
+                ...(scope === undefined ? {} : { scope }),
+              };
+              const brvResult = await brvBridge.search(query, searchOptions);
+              return formatSearchResults(
+                brvResult.results,
+                brvResult.totalFound,
+                brvResult.message,
+              );
+            } catch (error) {
+              const message = error instanceof Error ? error.message : String(error);
+              logBrv("error", `Manual ByteRover search failed: ${message}`);
+              return `ByteRover search failed: ${message}`;
+            }
+          },
+        }),
+        brv_persist: tool({
+          description:
+            "Persist raw memory text into ByteRover without automatic curation wrapping.",
+          args: {
+            context: tool.schema.string().trim().min(1).describe("Raw memory text to persist."),
+          },
+          execute: async ({ context: memory }, toolContext) => {
+            if (!(await ensureBridgeReady())) return "ByteRover bridge is not ready.";
+            try {
+              const brvResult = await brvBridge.persist(memory, {
+                cwd: toolContext.directory,
+                detach: false,
+              });
+              const suffix = brvResult.message ? `: ${brvResult.message}` : "";
+              return `ByteRover persist ${brvResult.status}${suffix}`;
+            } catch (error) {
+              const message = error instanceof Error ? error.message : String(error);
+              logBrv("error", `Manual ByteRover persist failed: ${message}`);
+              return `ByteRover persist failed: ${message}`;
+            }
+          },
+        }),
+      }
+    : undefined;
+
   return {
+    ...(manualTools === undefined ? {} : { tool: manualTools }),
     event: async ({ event }) => {
       if (event.type === "session.idle") {
         const sessionID = event.properties.sessionID;
