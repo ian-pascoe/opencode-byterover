@@ -1,5 +1,11 @@
 # opencode-byterover
 
+## 0.1.4
+
+### Patch Changes
+
+- [#15](https://github.com/ian-pascoe/opencode-byterover/pull/15) [`5a665f7`](https://github.com/ian-pascoe/opencode-byterover/commit/5a665f7284a2094da84f9b775afcbe0e07c9330e) Thanks [@ian-pascoe](https://github.com/ian-pascoe)! - Fix ByteRover `.brv/.gitignore` bootstrapping so existing ignore files are upgraded with missing generated-state rules without removing custom rules.
+
 ## 0.1.3
 
 ### Patch Changes
