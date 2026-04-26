@@ -1,5 +1,11 @@
 # opencode-byterover
 
+## 0.1.5
+
+### Patch Changes
+
+- [#17](https://github.com/ian-pascoe/opencode-byterover/pull/17) [`a272a6d`](https://github.com/ian-pascoe/opencode-byterover/commit/a272a6d0ab78654070af207d3ee47212c75ff7c6) Thanks [@ian-pascoe](https://github.com/ian-pascoe)! - Tighten plugin configuration validation, prevent duplicate concurrent curation, publish package type declarations, and improve ByteRover setup documentation.
+
 ## 0.1.4
 
 ### Patch Changes
