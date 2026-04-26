@@ -1,10 +1,10 @@
 ---
-title: ByteRover recall query echo fix
+createdAt: '2026-04-24T18:13:13.757Z'
+keywords: []
+related: [facts/project/package_and_build_changes.md, facts/project/plugin_configuration_knobs.md, facts/project/configurable_recall_and_persist_prompts.md, facts/project/byterover_recall_query_echo_issue.md, facts/project/curated_turns_cache_bound.md, facts/project/conversation_fragment_pending_completion.md]
 summary: ByteRover recall responses are sanitized by stripping only the echoed query from the Summary header; tests, lint, typecheck, and build all passed.
 tags: []
-related: []
-keywords: []
-createdAt: '2026-04-24T18:13:13.757Z'
+title: ByteRover recall query echo fix
 updatedAt: '2026-04-24T18:13:13.757Z'
 ---
 ## Reason

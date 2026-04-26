@@ -1,10 +1,10 @@
 ---
-title: Conversation Fragment Pending Completion
+createdAt: '2026-04-24T17:08:40.091Z'
+keywords: []
+related: [facts/project/package_and_build_changes.md, facts/project/plugin_configuration_knobs.md, facts/project/configurable_recall_and_persist_prompts.md, facts/project/byterover_recall_query_echo_fix.md, facts/project/byterover_recall_query_echo_issue.md, facts/project/curated_turns_cache_bound.md]
 summary: Conversation fragment documenting release-management and repo-maintenance context surfaced in a ByteRover knowledge block.
 tags: []
-related: []
-keywords: []
-createdAt: '2026-04-24T17:08:40.091Z'
+title: Conversation Fragment Pending Completion
 updatedAt: '2026-04-24T18:03:30.498Z'
 ---
 ## Reason

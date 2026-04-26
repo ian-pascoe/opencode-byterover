@@ -1,10 +1,10 @@
 ---
-title: Injected ByteRover Context Availability
+createdAt: '2026-04-24T18:02:50.783Z'
+keywords: []
+related: [facts/project/byterover_context_availability.md, facts/project/conversation_context_quoting_boundary.md]
 summary: ByteRover injected 5 relevant knowledge base topics into the conversation block.
 tags: []
-related: []
-keywords: []
-createdAt: '2026-04-24T18:02:50.783Z'
+title: Injected ByteRover Context Availability
 updatedAt: '2026-04-24T18:25:27.199Z'
 ---
 ## Reason

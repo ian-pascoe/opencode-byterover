@@ -1,10 +1,10 @@
 ---
-title: Awesome OpenCode Plugin PR
+createdAt: '2026-04-24T19:25:54.373Z'
+keywords: []
+related: [release_management/ci/ecosystem_docs_update_pr.md]
 summary: 'Submitted opencode-byterover to awesome-opencode via PR #309; validation passed after npm ci, plugin entry added as YAML, README regenerated, and commit 418958e created.'
 tags: []
-related: []
-keywords: []
-createdAt: '2026-04-24T19:25:54.373Z'
+title: Awesome OpenCode Plugin PR
 updatedAt: '2026-04-24T19:25:54.373Z'
 ---
 ## Reason

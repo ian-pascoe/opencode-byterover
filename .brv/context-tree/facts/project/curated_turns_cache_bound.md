@@ -1,10 +1,10 @@
 ---
-title: Curated Turns Cache Bound
+createdAt: '2026-04-24T19:02:28.099Z'
+keywords: []
+related: [facts/project/package_and_build_changes.md, facts/project/plugin_configuration_knobs.md, facts/project/configurable_recall_and_persist_prompts.md, facts/project/byterover_recall_query_echo_fix.md, facts/project/byterover_recall_query_echo_issue.md, facts/project/conversation_fragment_pending_completion.md]
 summary: Curated-turn dedupe state now lives inside ByteroverPlugin with an LRU-style Map capped at 500 sessions, plus a regression test and verified repo checks.
 tags: []
-related: []
-keywords: []
-createdAt: '2026-04-24T19:02:28.099Z'
+title: Curated Turns Cache Bound
 updatedAt: '2026-04-24T19:04:51.693Z'
 ---
 ## Reason

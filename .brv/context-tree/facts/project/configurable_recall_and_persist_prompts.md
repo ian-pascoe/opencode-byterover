@@ -1,10 +1,10 @@
 ---
-title: Configurable Recall and Persist Prompts
+createdAt: '2026-04-24T18:27:49.316Z'
+keywords: []
+related: [facts/project/package_and_build_changes.md, facts/project/plugin_configuration_knobs.md, facts/project/byterover_recall_query_echo_fix.md, facts/project/byterover_recall_query_echo_issue.md, facts/project/curated_turns_cache_bound.md, facts/project/conversation_fragment_pending_completion.md]
 summary: Recall and persist instruction text can be overridden via config fields while preserving existing message formatting and <byterover-context> injection behavior.
 tags: []
-related: []
-keywords: []
-createdAt: '2026-04-24T18:27:49.316Z'
+title: Configurable Recall and Persist Prompts
 updatedAt: '2026-04-24T18:27:49.316Z'
 ---
 ## Reason

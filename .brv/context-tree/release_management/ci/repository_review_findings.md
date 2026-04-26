@@ -1,10 +1,10 @@
 ---
-title: Repository Review Findings
+createdAt: '2026-04-24T17:04:26.153Z'
+keywords: []
+related: [release_management/ci/changesets_and_github_actions_ci.md, release_management/ci/husky_pre_commit_checks.md, release_management/ci/git_ignore_state_verification.md, release_management/ci/brv_gitignore_bootstrap.md]
 summary: Review findings cover duplicate curation race conditions, in-flight marker cleanup bug, .brv/.gitignore normalization precedence regression, and declaration map packaging mismatch.
 tags: []
-related: [release_management/ci/changesets_and_github_actions_ci.md, release_management/ci/husky_pre_commit_checks.md, release_management/ci/git_ignore_state_verification.md]
-keywords: []
-createdAt: '2026-04-24T17:04:26.153Z'
+title: Repository Review Findings
 updatedAt: '2026-04-26T10:42:38.123Z'
 ---
 ## Reason
