@@ -1,5 +1,11 @@
 # opencode-byterover
 
+## 0.1.7
+
+### Patch Changes
+
+- [#22](https://github.com/ian-pascoe/opencode-byterover/pull/22) [`82b1a93`](https://github.com/ian-pascoe/opencode-byterover/commit/82b1a938d6a5816b81a089277c01335d3a5b796f) Thanks [@ian-pascoe](https://github.com/ian-pascoe)! - Increase the default ByteRover search, recall, and persist timeouts; expose per-call `timeoutMs` on manual memory tools; and make manual persist fire-and-forget by default.
+
 ## 0.1.6
 
 ### Patch Changes
