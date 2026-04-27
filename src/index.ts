@@ -68,6 +68,27 @@ const formatSearchResults = (
   return [header, ...lines].join("\n");
 };
 
+const buildManualToolGuidance = (config: { autoRecall: boolean; autoPersist: boolean }) => {
+  const guidance = [
+    "ByteRover memory guidance:",
+    `Automatic recall is ${config.autoRecall ? "enabled" : "disabled"}.`,
+    `Automatic persist is ${config.autoPersist ? "enabled" : "disabled"}.`,
+  ];
+
+  if (config.autoRecall && config.autoPersist) {
+    guidance.push(
+      "Rely on automatic recall and automatic persist for routine memory behavior instead of consistently calling the manual tools.",
+      "Use `brv_recall`, `brv_search`, or `brv_persist` when you need an extra targeted lookup, immediate durable save, or explicit user-requested memory operation.",
+    );
+  } else {
+    guidance.push(
+      "Use `brv_recall`, `brv_search`, and `brv_persist` when durable memory is useful because one or more automatic memory behaviors are disabled.",
+    );
+  }
+
+  return guidance.join("\n");
+};
+
 const normalizeBrvGitignore = (existing: string) => {
   const output: Array<string> = [];
   let insertedManagedBlock = false;
@@ -400,6 +421,7 @@ export const ByteroverPlugin: Plugin = async ({ client, directory: cwd }, option
       await curateTurn(sessionID);
     },
     "experimental.chat.system.transform": async ({ sessionID }, { system }) => {
+      if (config.manualTools) system.push(buildManualToolGuidance(config));
       if (!config.autoRecall) return;
       if (!sessionID) return;
 

@@ -258,7 +258,27 @@ describe("ByteroverPlugin", () => {
     expect(bridge?.recall).toHaveBeenCalledTimes(1);
     const query = bridge?.recall.mock.calls[0]?.[0] as string;
     expect(query).toContain("[user]: latest question");
-    expect(system).toEqual(["<byterover-context>\nremembered context\n</byterover-context>"]);
+    expect(system).toContain("<byterover-context>\nremembered context\n</byterover-context>");
+  });
+
+  test("guides agents to prefer automatic memory when recall and persist are enabled", async () => {
+    const { hooks } = await createPlugin([message("u3", "user", "latest question")]);
+    const system: Array<string> = [];
+    const transform = hooks["experimental.chat.system.transform"];
+
+    expect(transform).toBeDefined();
+    await transform!({ sessionID: "recall-session", model: {} as never }, { system });
+
+    expect(system[0]).toContain("ByteRover memory guidance");
+    expect(system[0]).toContain("Automatic recall is enabled");
+    expect(system[0]).toContain("Automatic persist is enabled");
+    expect(system[0]).toContain(
+      "Rely on automatic recall and automatic persist for routine memory behavior instead of consistently calling the manual tools",
+    );
+    expect(system[0]).toContain(
+      "Use `brv_recall`, `brv_search`, or `brv_persist` when you need an extra targeted lookup",
+    );
+    expect(system[1]).toBe("<byterover-context>\nremembered context\n</byterover-context>");
   });
 
   test("skips recall injection when autoRecall is disabled", async () => {
@@ -272,7 +292,25 @@ describe("ByteroverPlugin", () => {
     await transform!({ sessionID: "recall-session", model: {} as never }, { system });
 
     expect(bridge?.recall).not.toHaveBeenCalled();
-    expect(system).toEqual([]);
+    expect(system).not.toContain("<byterover-context>\nremembered context\n</byterover-context>");
+  });
+
+  test("guides agents to use manual tools when automatic memory is disabled", async () => {
+    const { hooks } = await createPlugin([message("u8", "user", "latest question")], {
+      autoRecall: false,
+      autoPersist: false,
+    });
+    const system: Array<string> = [];
+    const transform = hooks["experimental.chat.system.transform"];
+
+    expect(transform).toBeDefined();
+    await transform!({ sessionID: "recall-session", model: {} as never }, { system });
+
+    expect(system).toEqual([expect.stringContaining("Automatic recall is disabled")]);
+    expect(system[0]).toContain("Automatic persist is disabled");
+    expect(system[0]).toContain(
+      "Use `brv_recall`, `brv_search`, and `brv_persist` when durable memory is useful",
+    );
   });
 
   test("uses a custom recall prompt before the recent conversation block", async () => {

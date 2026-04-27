@@ -76,7 +76,9 @@ When `manualTools` is enabled, the plugin exposes three OpenCode tools:
 - `brv_search`: performs ranked file-level ByteRover memory search with optional `limit`, `scope`, and `timeoutMs` arguments.
 - `brv_persist`: persists raw memory text directly into ByteRover without automatic curation prompt wrapping. Defaults to fire-and-forget mode and accepts optional `timeoutMs` for long-running writes.
 
-Use manual recall or search when the agent needs context on demand. Use manual persist when there is a durable fact, decision, preference, or technical detail that should be saved immediately instead of waiting for idle-session curation.
+When `autoRecall` and `autoPersist` are enabled, the system prompt tells the agent to rely on automatic memory for routine behavior instead of consistently calling manual tools. If either automatic behavior is disabled, the prompt instead tells the agent to use the manual tools when durable memory is useful.
+
+Use manual recall or search when the agent needs targeted context beyond automatic recall. Use manual persist when there is a durable fact, decision, preference, or technical detail that should be saved immediately instead of waiting for idle-session curation.
 
 ### Example
 
