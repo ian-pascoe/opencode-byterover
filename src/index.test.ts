@@ -127,6 +127,16 @@ describe("ByteroverPlugin", () => {
     });
   });
 
+  test("uses a longer default persist timeout", async () => {
+    const { bridge } = await createPlugin([]);
+
+    expect(bridge?.config).toMatchObject({
+      searchTimeoutMs: 30_000,
+      recallTimeoutMs: 30_000,
+      persistTimeoutMs: 60_000,
+    });
+  });
+
   test("returns no hooks or bridge when disabled", async () => {
     const { hooks } = await createPlugin([], { enabled: false });
 
@@ -311,6 +321,26 @@ describe("ByteroverPlugin", () => {
     expect(result).toBe("ByteRover bridge is not ready.");
   });
 
+  test("manual recall can override the recall timeout", async () => {
+    const { hooks } = await createPlugin([]);
+
+    const result = await hooks.tool!.brv_recall!.execute(
+      { query: "manual query", timeoutMs: 45_000 },
+      toolContext({ directory: "/workspace" }),
+    );
+    const overrideBridge = bridgeInstances[bridgeInstances.length - 1];
+
+    expect(overrideBridge?.config).toMatchObject({
+      cwd: "/workspace",
+      recallTimeoutMs: 45_000,
+    });
+    expect(overrideBridge?.recall).toHaveBeenCalledWith("manual query", {
+      cwd: "/workspace",
+      signal: expect.any(AbortSignal),
+    });
+    expect(result).toBe("remembered context");
+  });
+
   test("manual search passes options and formats ranked results", async () => {
     const { bridge, hooks } = await createPlugin([]);
     bridge?.search.mockResolvedValue({
@@ -345,6 +375,25 @@ describe("ByteroverPlugin", () => {
     expect(result).toContain("related: architecture/hooks.md");
   });
 
+  test("manual search can override the search timeout", async () => {
+    const { hooks } = await createPlugin([]);
+
+    const result = await hooks.tool!.brv_search!.execute(
+      { query: "manual tools", timeoutMs: 45_000 },
+      toolContext({ directory: "/workspace" }),
+    );
+    const overrideBridge = bridgeInstances[bridgeInstances.length - 1];
+
+    expect(overrideBridge?.config).toMatchObject({
+      cwd: "/workspace",
+      searchTimeoutMs: 45_000,
+    });
+    expect(overrideBridge?.search).toHaveBeenCalledWith("manual tools", {
+      cwd: "/workspace",
+    });
+    expect(result).toBe("No matches");
+  });
+
   test("manual persist stores raw memory text without curation prompt", async () => {
     const { bridge, hooks } = await createPlugin([]);
 
@@ -355,9 +404,29 @@ describe("ByteroverPlugin", () => {
 
     expect(bridge?.persist).toHaveBeenCalledWith("Use pnpm for this repository.", {
       cwd: "/workspace",
-      detach: false,
+      detach: true,
     });
     expect(bridge?.persist.mock.calls[0]?.[0]).not.toContain("Conversation:");
+    expect(result).toBe("ByteRover persist completed: ok");
+  });
+
+  test("manual persist can override the persist timeout", async () => {
+    const { hooks } = await createPlugin([]);
+
+    const result = await hooks.tool!.brv_persist!.execute(
+      { context: "Remember the release checklist.", timeoutMs: 120_000 },
+      toolContext({ directory: "/workspace" }),
+    );
+    const overrideBridge = bridgeInstances[bridgeInstances.length - 1];
+
+    expect(overrideBridge?.config).toMatchObject({
+      cwd: "/workspace",
+      persistTimeoutMs: 120_000,
+    });
+    expect(overrideBridge?.persist).toHaveBeenCalledWith("Remember the release checklist.", {
+      cwd: "/workspace",
+      detach: true,
+    });
     expect(result).toBe("ByteRover persist completed: ok");
   });
 

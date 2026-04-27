@@ -26,9 +26,9 @@ export const brvGitignore = `${brvGitignoreBeginMarker}\n${brvGitignoreRules}${b
 export const configDefaults = {
   enabled: true,
   brvPath: "brv",
-  searchTimeoutMs: 15_000,
-  recallTimeoutMs: 15_000,
-  persistTimeoutMs: 15_000,
+  searchTimeoutMs: 30_000,
+  recallTimeoutMs: 30_000,
+  persistTimeoutMs: 60_000,
   quiet: false,
   autoRecall: true,
   autoPersist: true,
