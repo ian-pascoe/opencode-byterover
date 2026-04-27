@@ -1,10 +1,14 @@
 ---
-title: High Value Plugin Tests
+consolidated_at: '2026-04-26T11:05:18.979Z'
+consolidated_from:
+  - {date: '2026-04-26T11:05:18.979Z', path: tests/build/high_value_plugin_tests.abstract.md, reason: 'These three files describe the same test-suite split and cover overlapping content at different levels of detail; the markdown file is the richest source and already contains the full structured knowledge, while the abstract and overview are condensed duplicates.'}
+  - {date: '2026-04-26T11:05:18.979Z', path: tests/build/high_value_plugin_tests.overview.md, reason: 'These three files describe the same test-suite split and cover overlapping content at different levels of detail; the markdown file is the richest source and already contains the full structured knowledge, while the abstract and overview are condensed duplicates.'}
+createdAt: '2026-04-24T17:15:40.250Z'
+keywords: []
+related: []
 summary: Test suite split into module-level tests for messages, recall stripping, and LRU cache behavior, while plugin-level tests retain integration coverage for config, hooks, persistence, and bootstrap behavior.
 tags: []
-related: []
-keywords: []
-createdAt: '2026-04-24T17:15:40.250Z'
+title: High Value Plugin Tests
 updatedAt: '2026-04-24T19:14:59.432Z'
 ---
 ## Reason
@@ -67,3 +71,15 @@ Kept in src/index.test.ts: bridge config passthrough, disabled plugin behavior, 
 - **test_suite_split**: The test suite was split into module-level files for messages, recall stripping, and LRU cache behavior. [project]
 - **redundant_plugin_tests_removed**: Redundant plugin-level tests were removed after behavior was extracted into dedicated unit coverage. [project]
 - **remaining_plugin_test_coverage**: The remaining plugin-level tests keep integration coverage for bridge config passthrough, disabled plugin behavior, .brv/.gitignore bootstrap behavior, recall hook injection, auto-recall disabled behavior, custom recall prompt wiring, idle curation dedupe, auto-persist disabled behavior, custom persist prompt wiring, and invalid config logging/no hooks. [project]
+
+## Consolidated overview content
+- The test suite was split so pure helper behavior lives in module-level tests, while src/index.test.ts keeps only plugin integration coverage.
+- New unit tests were added for message helpers, recall sanitization, and LRU cache behavior.
+- Redundant plugin tests that re-checked extracted helper internals through mocks were removed.
+- Missing-options handling was fixed with Config.safeParse(options ?? {}).
+- The refactor preserved important plugin behavior coverage: config passthrough, bootstrap behavior, hooks, persistence, disabled-plugin behavior, and invalid config handling.
+- Validation passed after the change: pnpm format:check, pnpm lint, pnpm test, pnpm typecheck, and pnpm build all succeeded.
+- pnpm test reported 17 tests across 4 files.
+
+## Consolidated abstract content
+The test suite was split into module-level unit tests for helpers while plugin-level tests retain integration coverage for config, hooks, persistence, bootstrap, and invalid configuration handling.
