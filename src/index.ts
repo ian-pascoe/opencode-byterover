@@ -1,6 +1,6 @@
 import { tool, type Plugin } from "@opencode-ai/plugin";
 import { BrvBridge } from "@byterover/brv-bridge";
-import type { SearchResultItem } from "@byterover/brv-bridge";
+import type { BrvLogger, SearchResultItem } from "@byterover/brv-bridge";
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
@@ -169,19 +169,29 @@ export const ByteroverPlugin: Plugin = async ({ client, directory: cwd }, option
     logBrv("warn", `Failed to bootstrap .brv/.gitignore: ${message}`);
   }
 
-  const brvBridge = new BrvBridge({
-    brvPath: config.brvPath ?? "brv",
-    searchTimeoutMs: config.searchTimeoutMs,
-    recallTimeoutMs: config.recallTimeoutMs,
-    persistTimeoutMs: config.persistTimeoutMs,
-    cwd,
-    logger: {
-      debug: (message) => logBrv("debug", message),
-      info: (message) => logBrv("info", message),
-      warn: (message) => logBrv("warn", message),
-      error: (message) => logBrv("error", message),
-    },
-  });
+  const brvLogger: BrvLogger = {
+    debug: (message) => logBrv("debug", message),
+    info: (message) => logBrv("info", message),
+    warn: (message) => logBrv("warn", message),
+    error: (message) => logBrv("error", message),
+  };
+
+  const createBridge = (override?: {
+    cwd?: string;
+    searchTimeoutMs?: number;
+    recallTimeoutMs?: number;
+    persistTimeoutMs?: number;
+  }) =>
+    new BrvBridge({
+      brvPath: config.brvPath ?? "brv",
+      searchTimeoutMs: override?.searchTimeoutMs ?? config.searchTimeoutMs,
+      recallTimeoutMs: override?.recallTimeoutMs ?? config.recallTimeoutMs,
+      persistTimeoutMs: override?.persistTimeoutMs ?? config.persistTimeoutMs,
+      cwd: override?.cwd ?? cwd,
+      logger: brvLogger,
+    });
+
+  const brvBridge = createBridge();
 
   const fetchSessionMessages = async (sessionID: string): Promise<Array<SessionMessage>> => {
     const messagesResponse = await client.session.messages({
@@ -267,11 +277,21 @@ export const ByteroverPlugin: Plugin = async ({ client, directory: cwd }, option
           description: "Recall relevant context from ByteRover memory for a raw query.",
           args: {
             query: tool.schema.string().trim().min(1).describe("Raw recall query."),
+            timeoutMs: tool.schema
+              .number()
+              .int()
+              .positive()
+              .optional()
+              .describe("Optional recall timeout in milliseconds for this memory query."),
           },
-          execute: async ({ query }, context) => {
+          execute: async ({ query, timeoutMs }, context) => {
             if (!(await ensureBridgeReady())) return "ByteRover bridge is not ready.";
             try {
-              const brvResult = await brvBridge.recall(query, {
+              const recallBridge =
+                timeoutMs === undefined
+                  ? brvBridge
+                  : createBridge({ cwd: context.directory, recallTimeoutMs: timeoutMs });
+              const brvResult = await recallBridge.recall(query, {
                 cwd: context.directory,
                 signal: context.abort,
               });
@@ -301,8 +321,14 @@ export const ByteroverPlugin: Plugin = async ({ client, directory: cwd }, option
               .min(1)
               .optional()
               .describe("Optional ByteRover path prefix to scope search results."),
+            timeoutMs: tool.schema
+              .number()
+              .int()
+              .positive()
+              .optional()
+              .describe("Optional search timeout in milliseconds for this memory lookup."),
           },
-          execute: async ({ query, limit, scope }, context) => {
+          execute: async ({ query, limit, scope, timeoutMs }, context) => {
             if (!(await ensureBridgeReady())) return "ByteRover bridge is not ready.";
             try {
               const searchOptions = {
@@ -310,7 +336,11 @@ export const ByteroverPlugin: Plugin = async ({ client, directory: cwd }, option
                 ...(limit === undefined ? {} : { limit }),
                 ...(scope === undefined ? {} : { scope }),
               };
-              const brvResult = await brvBridge.search(query, searchOptions);
+              const searchBridge =
+                timeoutMs === undefined
+                  ? brvBridge
+                  : createBridge({ cwd: context.directory, searchTimeoutMs: timeoutMs });
+              const brvResult = await searchBridge.search(query, searchOptions);
               return formatSearchResults(
                 brvResult.results,
                 brvResult.totalFound,
@@ -328,13 +358,23 @@ export const ByteroverPlugin: Plugin = async ({ client, directory: cwd }, option
             "Persist raw memory text into ByteRover without automatic curation wrapping.",
           args: {
             context: tool.schema.string().trim().min(1).describe("Raw memory text to persist."),
+            timeoutMs: tool.schema
+              .number()
+              .int()
+              .positive()
+              .optional()
+              .describe("Optional persist timeout in milliseconds for this memory write."),
           },
-          execute: async ({ context: memory }, toolContext) => {
+          execute: async ({ context: memory, timeoutMs }, toolContext) => {
             if (!(await ensureBridgeReady())) return "ByteRover bridge is not ready.";
             try {
-              const brvResult = await brvBridge.persist(memory, {
+              const persistBridge =
+                timeoutMs === undefined
+                  ? brvBridge
+                  : createBridge({ cwd: toolContext.directory, persistTimeoutMs: timeoutMs });
+              const brvResult = await persistBridge.persist(memory, {
                 cwd: toolContext.directory,
-                detach: false,
+                detach: true,
               });
               const suffix = brvResult.message ? `: ${brvResult.message}` : "";
               return `ByteRover persist ${brvResult.status}${suffix}`;

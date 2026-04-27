@@ -53,9 +53,9 @@ The plugin accepts these optional settings:
 
 - `enabled`: enable or disable the plugin without removing it from config. Defaults to `true`.
 - `brvPath`: custom ByteRover CLI path. Defaults to `brv` (assuming it's in the system `PATH`).
-- `searchTimeoutMs`: ByteRover search timeout in milliseconds. Defaults to `15000`.
-- `recallTimeoutMs`: ByteRover recall timeout in milliseconds. Defaults to `15000`.
-- `persistTimeoutMs`: ByteRover persist timeout in milliseconds. Defaults to `15000`.
+- `searchTimeoutMs`: ByteRover search timeout in milliseconds. Defaults to `30000`.
+- `recallTimeoutMs`: ByteRover recall timeout in milliseconds. Defaults to `30000`.
+- `persistTimeoutMs`: ByteRover persist timeout in milliseconds. Defaults to `60000`.
 - `quiet`: suppress toast notifications for ByteRover operations. Defaults to `false`.
 - `autoRecall`: automatically recall and inject ByteRover context into prompts. Defaults to `true`.
 - `autoPersist`: automatically curate session turns into ByteRover. Defaults to `true`.
@@ -72,9 +72,9 @@ Numeric timeout and limit values must be positive integers. `brvPath`, `recallPr
 
 When `manualTools` is enabled, the plugin exposes three OpenCode tools:
 
-- `brv_recall`: asks ByteRover to synthesize relevant memory for a raw query.
-- `brv_search`: performs ranked file-level ByteRover memory search with optional `limit` and `scope` arguments.
-- `brv_persist`: persists raw memory text directly into ByteRover without automatic curation prompt wrapping.
+- `brv_recall`: asks ByteRover to synthesize relevant memory for a raw query. Accepts optional `timeoutMs`.
+- `brv_search`: performs ranked file-level ByteRover memory search with optional `limit`, `scope`, and `timeoutMs` arguments.
+- `brv_persist`: persists raw memory text directly into ByteRover without automatic curation prompt wrapping. Defaults to fire-and-forget mode and accepts optional `timeoutMs` for long-running writes.
 
 Use manual recall or search when the agent needs context on demand. Use manual persist when there is a durable fact, decision, preference, or technical detail that should be saved immediately instead of waiting for idle-session curation.
 
@@ -89,9 +89,9 @@ Use manual recall or search when the agent needs context on demand. Use manual p
       {
         "enabled": true,
         "brvPath": "brv",
-        "searchTimeoutMs": 15000,
-        "recallTimeoutMs": 15000,
-        "persistTimeoutMs": 15000,
+        "searchTimeoutMs": 30000,
+        "recallTimeoutMs": 30000,
+        "persistTimeoutMs": 60000,
         "autoRecall": true,
         "autoPersist": true,
         "manualTools": true,
