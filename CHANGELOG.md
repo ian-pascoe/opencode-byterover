@@ -1,5 +1,11 @@
 # opencode-byterover
 
+## 0.1.8
+
+### Patch Changes
+
+- [#25](https://github.com/ian-pascoe/opencode-byterover/pull/25) [`adcc30f`](https://github.com/ian-pascoe/opencode-byterover/commit/adcc30fe64ea55b50e511c141d94344975007ad8) Thanks [@ian-pascoe](https://github.com/ian-pascoe)! - Guide agents to prefer automatic ByteRover memory when auto recall and persist are enabled, and to use manual memory tools when automatic memory is disabled.
+
 ## 0.1.7
 
 ### Patch Changes
